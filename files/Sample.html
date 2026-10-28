@@ -1,0 +1,91 @@
+<html>
+    <head>
+        <title>Sample Page</title>
+        <style>
+            table {
+                border-collapse: collapse;
+                width: 50%;
+            }
+            td {
+                padding: 8px;
+            }
+            .demo{
+                font-weight: bold;
+                color: blue;
+            }
+
+            .another{
+                font-weight: bold;
+                color: blue;
+            }
+
+            #xyz {
+                border: 2px solid red;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Welcome to the Sample Registration Form</h1>
+        <p>Sample Registration Form</p>
+        
+        <table>
+            <tr>
+                <td><label style="font-weight:bold;">First Name:</label></td>
+                <td><input type="text" placeholder="First Name" id="xyz"></td>
+            </tr>
+            <tr>
+                <td>Last Name:</td>
+                <td><input class = "demo" type="text" name="last_name"></td>
+            </tr>
+            <tr>
+                <td>Email:</td>
+                <td><input type="email" name="email"></td>
+            </tr>
+            <tr>
+                <td>Password:</td>
+                <td><input type="password" name="password"></td>
+            </tr>
+            <tr>
+                <td>Confirm Password:</td>
+                <td><input type="password" name="confirm_password"></td>
+            </tr>
+            <tr>
+                <td>Birthday:</td>
+                <td><input type="date" name="birthday"></td>
+            </tr>
+            <tr>
+                <td>Gender:</td>
+                <td>
+                    <input type="radio" name="gender" value="male"> Male
+                    <input type="radio" name="gender" value="female"> Female
+                    <input type="radio" name="gender" value="other"> Other
+                </td>
+            </tr>
+            <tr>
+                <td>Photo:</td>
+                <td><input type="file" name="photo"></td>
+            </tr>
+            <tr>
+                <td>Country:</td>
+                <td>
+                    <select name="country">
+                        <option value="usa">USA</option>
+                        <option value="canada">Canada</option>
+                        <option value="uk">UK</option>
+                        <option value="australia">Australia</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>Accept Terms and Conditions:</td>
+                <td><input type="checkbox" id="terms" name="terms"></td>
+            </tr>
+            <tr>
+                <td colspan="2" align="center"><input type="submit" value="Register"></td>
+            </tr>
+            <tr>
+                <td colspan="2" align="center"><a href="terms.html">Read Terms and Conditions</a></td>
+            </tr>
+        </table>
+</body>
+</html>

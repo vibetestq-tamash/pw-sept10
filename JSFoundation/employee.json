@@ -1,0 +1,10 @@
+{
+    "employeeName": "John Doe", 
+    "employeeId": 67890,
+    "employeeTech": ["JavaScript", "Python", "Java"],
+    "employeeAddress": {
+        "street": "123 Main St",
+        "city": "Anytown",
+        "zipCode": 12345
+    }
+}

@@ -1,0 +1,15 @@
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+.playwright-mcp
+allure-report
+allure-results
+monocart-report
+perfetto.json.gz
+report-history.json
+
