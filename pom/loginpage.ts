@@ -40,5 +40,12 @@ export class LoginPage extends BasePage {
         await expect(this.hdrLogin).toBeVisible();
         console.log("Login Page is displayed");
     }
+
+    public async performLogin(userName:string, password:string){
+        await this.enterUserName(userName);
+        await this.enterPassword(password);
+        await this.clickOnLogin();
+        console.log(`Performed login with username: ${userName} and password: ${password}`);
+    }
 }
 
