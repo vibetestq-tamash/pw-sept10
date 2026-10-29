@@ -14,7 +14,7 @@ export class LoginPage extends BasePage {
         super(page);
         // this.page = page;
 
-        this.txtUserName = page.getByRole('textbox', { name: 'Username1' }).describe("Username Textbox")
+        this.txtUserName = page.getByRole('textbox', { name: 'Username' }).describe("Username Textbox")
         this.txtPassword = page.getByRole('textbox', { name: 'Password' }).describe("Password Textbox")
         this.btnLogin = page.getByRole('button', { name: 'Login' }).describe("Login Button")
         this.hdrLogin = page.getByRole('heading', { name: 'Login' }).describe("Login Header")
