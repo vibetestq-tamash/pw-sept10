@@ -1,5 +1,5 @@
 import { test } from "../fixtures/appbase";
-import { employees } from "../testData/emp.json";
+import { employees } from "../testdata/emp.json";
 
 test.describe('Data Driven Tests', () => {
 
