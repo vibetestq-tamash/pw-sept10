@@ -13,7 +13,7 @@ import { LoginPage,
 // import { DashboardPage } from "../pom/dashboardpage";
 // import { PIMPage } from "../pom/pimpage";
 
-test('Login Test', async ({ page }) => {
+test('Login Test',{tag: '@smoke'}, async ({ page }) => {
 
     const basePage:BasePage = new BasePage(page);
     await basePage.navigateTo("https://qtpsudhakar-vibetestq-hrm.up.railway.app");
