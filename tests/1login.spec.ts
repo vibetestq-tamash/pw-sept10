@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-
+import { admin } from '../testdata/creds';
 // Syntax for creating test
 // test("description",async ({page})=>{
 // write all statements
@@ -9,8 +9,8 @@ test("Login test", {tag: '@smoke'}, async ({ page }) => {
 
     //navigate to hrm
     await page.goto("https://qtpsudhakar-vibetestq-hrm.up.railway.app");
-    await page.getByPlaceholder("Username").fill("testadmin");
-    await page.getByPlaceholder("Password").fill("Vibetestq@123#");
+    await page.getByPlaceholder("Username").fill(admin.username);
+    await page.getByPlaceholder("Password").fill(admin.password);
     await page.getByRole("button", { name: "Login" }).click();
 })
 

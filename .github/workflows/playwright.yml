@@ -4,6 +4,8 @@ on:
     branches: [ main, master, sudhakar ]
   pull_request:
     branches: [ main, master ]
+  schedule:
+    - cron: '41 8 30 * *'
 
 permissions:
   contents: write
@@ -24,8 +26,8 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
     - name: Run Playwright tests
-      run: npx playwright test --grep "@smoke"
-    - uses: actions/upload-artifact@v4
+      run: npx playwright test --grep "@smoke|@regression"
+    - uses: actions/upload-artifact@v
       if: always()
       with:
         name: playwright-report
