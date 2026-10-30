@@ -5,18 +5,18 @@ import { test, expect, Page } from '@playwright/test';
 // write all statements
 // })
 
-test("Login test", async ({ page }) => {
+test("Login test", {tag: '@smoke'}, async ({ page }) => {
 
     //navigate to hrm
     await page.goto("https://qtpsudhakar-vibetestq-hrm.up.railway.app");
     await page.getByPlaceholder("Username").fill("testadmin");
     await page.getByPlaceholder("Password").fill("Vibetestq@123#");
-    await page.getByRole("button",{name:"Login"}).click();
+    await page.getByRole("button", { name: "Login" }).click();
 })
 
 // mocha, jest, jasmine are other testing frameworks for JavaScript
 
-async function login(page:Page, userName:string, password:string){
+async function login(page: Page, userName: string, password: string) {
     await page.getByPlaceholder("Username").fill(userName);
 }
 
