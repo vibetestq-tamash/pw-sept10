@@ -1,0 +1,16 @@
+{
+    "validMembers": [
+        { "name": "Alice Walker", "gender": "female" },
+        { "name": "Robert Brown", "gender": "male" },
+        { "name": "Maria Garcia", "gender": "Female" }
+    ],
+    "invalidMembers": [
+        { "case": "missing name", "body": { "gender": "male" }, "msg": "Please provide a name and gender" },
+        { "case": "missing gender", "body": { "name": "John Carter" }, "msg": "Please provide a name and gender" },
+        { "case": "name too short", "body": { "name": "Bob", "gender": "male" }, "msg": "Name should be 4 to 25 characters long" },
+        { "case": "name too long", "body": { "name": "Abcdefghijklmnopqrstuvwxyz", "gender": "male" }, "msg": "Name should be 4 to 25 characters long" },
+        { "case": "name with digits", "body": { "name": "John Smith2", "gender": "male" }, "msg": "Name should only contain Alphabets" },
+        { "case": "invalid gender", "body": { "name": "John Carter", "gender": "other" }, "msg": "Gender should be either male or female only" },
+        { "case": "extra field", "body": { "name": "John Carter", "gender": "male", "age": 30 }, "msg": "Please provide only name and gender" }
+    ]
+}
