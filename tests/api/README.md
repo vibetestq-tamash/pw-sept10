@@ -4,6 +4,8 @@ These lessons test the **EmployeeRestSample** API
 ([QtpSudhakarTrainings/EmployeeRestSample](https://github.com/QtpSudhakarTrainings/EmployeeRestSample))
 with Playwright's `request` fixture. No browser is used.
 
+> **New to API testing?** Start with the step-by-step guide: [API-Testing-Guide.md](../../API-Testing-Guide.md)
+
 ## Setup
 
 1. In the EmployeeRestSample project: `npm install`, then `npm start` (it runs on http://localhost:5002)
