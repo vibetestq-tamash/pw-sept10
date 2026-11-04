@@ -11,22 +11,25 @@ with Playwright's `request` fixture. No browser is used.
 3. Run all the lessons:
 
 ```bash
-npx playwright test --project=api
+npx playwright test tests/api
 ```
 
-Run a single lesson with `npx playwright test --project=api tests/api/02Parameters.spec.ts`.
-To test a deployed copy of the API, set `API_BASE_URL=https://your-host npx playwright test --project=api`.
+Run a single lesson with `npx playwright test tests/api/02Parameters.spec.ts`.
+To test a deployed copy of the API, set `API_BASE_URL=https://your-host npx playwright test tests/api`.
+
+There is **no `baseURL` in `playwright.config.ts`**. The API address lives in one constant,
+`BASE_URL` in `fixtures/api.ts`, and every test builds full URLs from it: `` `${BASE_URL}/api/members` ``.
 
 ## Lessons
 
 | File | What it teaches |
 |------|-----------------|
-| `01RequestBasics.spec.ts` | `request.get`, `baseURL`, `status()`, `ok()`, `toBeOK()`, headers, `json()` vs `text()`, checking response shape, response time, `failOnStatusCode` |
+| `01RequestBasics.spec.ts` | `request.get`, full URLs from a `BASE_URL` constant, `status()`, `ok()`, `toBeOK()`, headers, `json()` vs `text()`, checking response shape, response time, `failOnStatusCode` |
 | `02Parameters.spec.ts` | Path params (`/members/1`), query params (`params` option, `URLSearchParams`), header params, 404 cases |
 | `03RequestData.spec.ts` | Body formats: `data` (JSON object / raw string), `form` (urlencoded), `multipart` (file upload); data-driven tests from `testdata/members.json`; cleanup in `afterEach` |
 | `04Authentication.spec.ts` | Basic Auth (manual header, helper, `httpCredentials`, `test.use`), API key, Bearer JWT (login, then send the token; decode claims), OAuth2 client credentials; negative auth tests |
 | `05CrudFlow.spec.ts` | End-to-end Create → Read → Update → Delete in `serial` mode with a shared id, plus the same flow in one test using `try/finally` |
-| `06CrudWithFixtures.spec.ts` | Custom fixtures (`api`, `createMember` in `fixtures/api.ts`) with automatic cleanup, `test.step`, partial PUT updates, negative PUT/DELETE tests, `request.fetch` with a method |
+| `06CrudWithFixtures.spec.ts` | Custom fixtures (`api`, a request context created in code with `BASE_URL` + auth, and `createMember`, both in `fixtures/api.ts`) with automatic cleanup, `test.step`, partial PUT updates, negative PUT/DELETE tests, `request.fetch` with a method |
 
 ## Switching the auth strategy
 
@@ -36,10 +39,10 @@ the matching `AUTH_MODE` so the right block in lesson 4 runs:
 
 | `app.js` line | Command |
 |---|---|
-| `app.use(basicAuth)` | `npx playwright test --project=api tests/api/04Authentication.spec.ts` |
-| `app.use(apiKeyAuth)` | `AUTH_MODE=apikey npx playwright test --project=api tests/api/04Authentication.spec.ts` |
-| `app.use(bearerAuth)` | `AUTH_MODE=jwt npx playwright test --project=api tests/api/04Authentication.spec.ts` |
-| `app.use(oauth2Auth)` | `AUTH_MODE=oauth2 npx playwright test --project=api tests/api/04Authentication.spec.ts` |
+| `app.use(basicAuth)` | `npx playwright test tests/api/04Authentication.spec.ts` |
+| `app.use(apiKeyAuth)` | `AUTH_MODE=apikey npx playwright test tests/api/04Authentication.spec.ts` |
+| `app.use(bearerAuth)` | `AUTH_MODE=jwt npx playwright test tests/api/04Authentication.spec.ts` |
+| `app.use(oauth2Auth)` | `AUTH_MODE=oauth2 npx playwright test tests/api/04Authentication.spec.ts` |
 
 Lessons 1-3, 5 and 6 use Basic Auth, so run them with the default `basicAuth` setting.
 

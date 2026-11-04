@@ -5,6 +5,10 @@
 
 import { test as base, expect, APIRequestContext } from '@playwright/test';
 
+// Where the API runs. Kept here (not in playwright.config.ts) so every test builds its own URL.
+// Override it to test a deployed copy:  API_BASE_URL=https://my-host npx playwright test tests/api
+export const BASE_URL = process.env.API_BASE_URL || 'http://localhost:5002';
+
 // ---------------------------------------------------------------------------
 // Demo credentials (they match middleware/auth/config.js in the API project).
 // In a real project, read these from environment variables / a .env file.
@@ -47,7 +51,8 @@ export type Member = {
 
 // ---------------------------------------------------------------------------
 // Custom fixtures
-//   api          -> an APIRequestContext that already sends Basic Auth on every call
+//   api          -> an APIRequestContext created in code with BASE_URL + Basic Auth,
+//                   so tests using it can call short paths like '/api/members'
 //   createMember -> creates a member for the test and deletes it afterwards (cleanup)
 // ---------------------------------------------------------------------------
 type ApiFixtures = {
@@ -56,9 +61,9 @@ type ApiFixtures = {
 };
 
 export const test = base.extend<ApiFixtures>({
-    api: async ({ playwright, baseURL }, use) => {
+    api: async ({ playwright }, use) => {
         const api = await playwright.request.newContext({
-            baseURL,
+            baseURL: BASE_URL, // set on this context only, not in the config
             extraHTTPHeaders: {
                 Accept: 'application/json',
                 ...basicAuthHeader(creds.basic.username, creds.basic.password),

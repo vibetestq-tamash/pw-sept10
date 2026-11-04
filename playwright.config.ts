@@ -50,22 +50,6 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      testIgnore: /api[\\/]/, // API tests live in their own project below
-    },
-
-    /* REST API tests (tests/api) - no browser needed, they use the `request` fixture.
-       Run with:  npx playwright test --project=api
-       Start the EmployeeRestSample server first (npm start -> http://localhost:5002),
-       or point API_BASE_URL at a deployed copy. */
-    {
-      name: 'api',
-      testMatch: /api[\\/].*\.spec\.ts/,
-      use: {
-        baseURL: process.env.API_BASE_URL || 'http://localhost:5002',
-        extraHTTPHeaders: {
-          Accept: 'application/json',
-        },
-      },
     },
 
     // {

@@ -11,11 +11,12 @@
 //     await response.json()  -> body parsed as JSON
 //     await response.text()  -> body as a plain string
 //
-// Run:  npx playwright test --project=api tests/api/01RequestBasics.spec.ts
-// The `api` project in playwright.config.ts sets baseURL, so paths like '/api/members' are enough.
+// Run:  npx playwright test tests/api/01RequestBasics.spec.ts
+// No baseURL is set in playwright.config.ts, so every request uses a full URL built from
+// BASE_URL (fixtures/api.ts). Change it in one place, or set the API_BASE_URL environment variable.
 
 import { test, expect } from '@playwright/test';
-import { basicAuthHeader } from '../../fixtures/api';
+import { BASE_URL, basicAuthHeader } from '../../fixtures/api';
 
 // Every /api/members call needs authentication. Lesson 4 covers it in depth.
 // For now we send a Basic Auth header with each request.
@@ -23,23 +24,23 @@ const authHeaders = basicAuthHeader('admin', 'admin');
 
 test.describe('Lesson 1 - Request basics', () => {
 
-    test('GET with a full URL (no baseURL)', async ({ request }) => {
-        // A full URL always works, even when the config sets no baseURL.
-        const baseURL = process.env.API_BASE_URL || 'http://localhost:5002';
-        const response = await request.get(`${baseURL}/api/members`, { headers: authHeaders });
+    test('GET with a hard-coded full URL', async ({ request }) => {
+        // The simplest possible API call: a complete URL as a string
+        const response = await request.get('http://localhost:5002/api/members', { headers: authHeaders });
 
         expect(response.status()).toBe(200);
     });
 
-    test('GET with a relative path (baseURL comes from the config)', async ({ request }) => {
-        const response = await request.get('/api/members', { headers: authHeaders });
+    test('GET with a URL built from the BASE_URL constant', async ({ request }) => {
+        // Better: keep the host in one constant, so switching environments is a one-line change
+        const response = await request.get(`${BASE_URL}/api/members`, { headers: authHeaders });
 
         // toBeOK() passes for any 2xx status. When it fails, Playwright prints the response.
         await expect(response).toBeOK();
     });
 
     test('Check status code, status text and ok()', async ({ request }) => {
-        const response = await request.get('/api/members', { headers: authHeaders });
+        const response = await request.get(`${BASE_URL}/api/members`, { headers: authHeaders });
 
         expect(response.status()).toBe(200);
         expect(response.statusText()).toBe('OK');
@@ -47,7 +48,7 @@ test.describe('Lesson 1 - Request basics', () => {
     });
 
     test('Check response headers', async ({ request }) => {
-        const response = await request.get('/api/members', { headers: authHeaders });
+        const response = await request.get(`${BASE_URL}/api/members`, { headers: authHeaders });
 
         const headers = response.headers(); // a plain object, header names are lower-case
         console.log(headers);
@@ -57,7 +58,7 @@ test.describe('Lesson 1 - Request basics', () => {
     });
 
     test('Read the body as JSON and check its structure', async ({ request }) => {
-        const response = await request.get('/api/members', { headers: authHeaders });
+        const response = await request.get(`${BASE_URL}/api/members`, { headers: authHeaders });
         const members = await response.json();
 
         // The endpoint returns an array of { id, name, gender }
@@ -75,7 +76,7 @@ test.describe('Lesson 1 - Request basics', () => {
     });
 
     test('Read the body as text', async ({ request }) => {
-        const response = await request.get('/api/members', { headers: authHeaders });
+        const response = await request.get(`${BASE_URL}/api/members`, { headers: authHeaders });
         const text = await response.text();
 
         expect(text.startsWith('[')).toBeTruthy(); // the raw JSON string
@@ -83,7 +84,7 @@ test.describe('Lesson 1 - Request basics', () => {
     });
 
     test('Check that the list is sorted by id', async ({ request }) => {
-        const response = await request.get('/api/members', { headers: authHeaders });
+        const response = await request.get(`${BASE_URL}/api/members`, { headers: authHeaders });
         const ids: number[] = (await response.json()).map((m: { id: number }) => m.id);
 
         const sorted = [...ids].sort((a, b) => a - b);
@@ -92,7 +93,7 @@ test.describe('Lesson 1 - Request basics', () => {
 
     test('Measure the response time', async ({ request }) => {
         const start = Date.now();
-        const response = await request.get('/api/members', { headers: authHeaders });
+        const response = await request.get(`${BASE_URL}/api/members`, { headers: authHeaders });
         const elapsed = Date.now() - start;
 
         console.log(`GET /api/members took ${elapsed} ms`);
@@ -102,7 +103,7 @@ test.describe('Lesson 1 - Request basics', () => {
 
     test('A 401 response is still a response, not an exception', async ({ request }) => {
         // No auth header. Playwright does NOT throw on 4xx/5xx, so you assert the status yourself.
-        const response = await request.get('/api/members');
+        const response = await request.get(`${BASE_URL}/api/members`);
 
         expect(response.status()).toBe(401);
         expect(response.ok()).toBeFalsy();
@@ -112,7 +113,7 @@ test.describe('Lesson 1 - Request basics', () => {
     test('failOnStatusCode makes non-2xx responses throw', async ({ request }) => {
         // Use this when any non-2xx response should fail the test straight away.
         await expect(
-            request.get('/api/members', { failOnStatusCode: true })
+            request.get(`${BASE_URL}/api/members`, { failOnStatusCode: true })
         ).rejects.toThrow(/401/);
     });
 });

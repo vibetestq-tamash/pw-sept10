@@ -10,12 +10,12 @@
 // Test data can be written inline, built in code, or read from a file
 // (testdata/members.json). Because the tests create data, they also delete it afterwards.
 //
-// Run:  npx playwright test --project=api tests/api/03RequestData.spec.ts
+// Run:  npx playwright test tests/api/03RequestData.spec.ts
 
 import { test, expect } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
-import { basicAuthHeader, uniqueName, Member } from '../../fixtures/api';
+import { BASE_URL, basicAuthHeader, uniqueName, Member } from '../../fixtures/api';
 import testData from '../../testdata/members.json';
 
 const headers = basicAuthHeader('admin', 'admin');
@@ -25,7 +25,7 @@ let createdIds: number[] = [];
 
 test.afterEach(async ({ request }) => {
     for (const id of createdIds) {
-        await request.delete(`/api/members/${id}`, { headers });
+        await request.delete(`${BASE_URL}/api/members/${id}`, { headers });
     }
     createdIds = [];
 });
@@ -35,7 +35,7 @@ test.describe('Lesson 3 - JSON body with `data`', () => {
     test('POST a JS object (serialized to JSON for you)', async ({ request }) => {
         const newMember = { name: uniqueName(), gender: 'female' };
 
-        const response = await request.post('/api/members', { headers, data: newMember });
+        const response = await request.post(`${BASE_URL}/api/members`, { headers, data: newMember });
 
         expect(response.status()).toBe(201);
         const body: Member = await response.json();
@@ -50,7 +50,7 @@ test.describe('Lesson 3 - JSON body with `data`', () => {
         const name = uniqueName();
         const json = JSON.stringify({ name, gender: 'male' });
 
-        const response = await request.post('/api/members', {
+        const response = await request.post(`${BASE_URL}/api/members`, {
             headers: { ...headers, 'Content-Type': 'application/json' },
             data: json,
         });
@@ -65,7 +65,7 @@ test.describe('Lesson 3 - JSON body with `data`', () => {
         type NewMember = Pick<Member, 'name' | 'gender'>;
         const payload: NewMember = { name: uniqueName('Typed'), gender: 'male' };
 
-        const response = await request.post('/api/members', { headers, data: payload });
+        const response = await request.post(`${BASE_URL}/api/members`, { headers, data: payload });
         const body: Member = await response.json();
         createdIds.push(body.id);
 
@@ -80,7 +80,7 @@ test.describe('Lesson 3 - Form body with `form`', () => {
         const name = uniqueName('Form');
 
         // Sent on the wire as: name=Form...&gender=female
-        const response = await request.post('/api/members', {
+        const response = await request.post(`${BASE_URL}/api/members`, {
             headers,
             form: { name, gender: 'female' },
         });
@@ -97,7 +97,7 @@ test.describe('Lesson 3 - Test data from a JSON file', () => {
     // One test per entry in testdata/members.json -> validMembers
     for (const member of testData.validMembers) {
         test(`Create a valid member: ${member.name} (${member.gender})`, async ({ request }) => {
-            const response = await request.post('/api/members', { headers, data: member });
+            const response = await request.post(`${BASE_URL}/api/members`, { headers, data: member });
 
             expect(response.status()).toBe(201);
             const body: Member = await response.json();
@@ -109,7 +109,7 @@ test.describe('Lesson 3 - Test data from a JSON file', () => {
     // Negative tests: every invalid body must be rejected with 400 and the right message
     for (const { case: caseName, body, msg } of testData.invalidMembers) {
         test(`Reject invalid data: ${caseName}`, async ({ request }) => {
-            const response = await request.post('/api/members', { headers, data: body });
+            const response = await request.post(`${BASE_URL}/api/members`, { headers, data: body });
 
             expect(response.status()).toBe(400);
             expect(await response.json()).toEqual({ msg });
@@ -117,7 +117,7 @@ test.describe('Lesson 3 - Test data from a JSON file', () => {
     }
 
     test('Reject an empty body', async ({ request }) => {
-        const response = await request.post('/api/members', { headers, data: {} });
+        const response = await request.post(`${BASE_URL}/api/members`, { headers, data: {} });
 
         expect(response.status()).toBe(400);
         expect((await response.json()).msg).toBe('Please provide a name and gender');
@@ -129,7 +129,7 @@ test.describe('Lesson 3 - File upload with `multipart`', () => {
     test('Upload a file from disk', async ({ request }) => {
         const filePath = path.join(__dirname, '..', '..', 'files', 'logo.png');
 
-        const response = await request.post('/api/upload', {
+        const response = await request.post(`${BASE_URL}/api/upload`, {
             headers,
             multipart: {
                 // the field name "file" is what the API expects
@@ -151,7 +151,7 @@ test.describe('Lesson 3 - File upload with `multipart`', () => {
 
     test('Upload a file built in memory', async ({ request }) => {
         // No file on disk needed: the API only checks the extension and the size
-        const response = await request.post('/api/upload', {
+        const response = await request.post(`${BASE_URL}/api/upload`, {
             headers,
             multipart: {
                 file: { name: 'generated.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('fake-jpeg-bytes') },
@@ -163,7 +163,7 @@ test.describe('Lesson 3 - File upload with `multipart`', () => {
     });
 
     test('Reject an unsupported file type', async ({ request }) => {
-        const response = await request.post('/api/upload', {
+        const response = await request.post(`${BASE_URL}/api/upload`, {
             headers,
             multipart: {
                 file: { name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('hello') },
@@ -177,7 +177,7 @@ test.describe('Lesson 3 - File upload with `multipart`', () => {
     test('Reject a file larger than 5 MB', async ({ request }) => {
         const sixMb = Buffer.alloc(6 * 1024 * 1024, 1);
 
-        const response = await request.post('/api/upload', {
+        const response = await request.post(`${BASE_URL}/api/upload`, {
             headers,
             multipart: {
                 file: { name: 'big.png', mimeType: 'image/png', buffer: sixMb },

@@ -8,10 +8,10 @@
 // The steps depend on each other (they share the id from the POST), so the block runs
 // in 'serial' mode: the tests run in order, and if one fails the rest are skipped.
 //
-// Run:  npx playwright test --project=api tests/api/05CrudFlow.spec.ts
+// Run:  npx playwright test tests/api/05CrudFlow.spec.ts
 
 import { test, expect } from '@playwright/test';
-import { basicAuthHeader, uniqueName, Member } from '../../fixtures/api';
+import { BASE_URL, basicAuthHeader, uniqueName, Member } from '../../fixtures/api';
 
 const headers = basicAuthHeader('admin', 'admin');
 
@@ -24,7 +24,7 @@ test.describe('Lesson 5 - CRUD flow (serial)', () => {
     const updatedName = uniqueName('Upd');
 
     test('1. CREATE - POST a new member', async ({ request }) => {
-        const response = await request.post('/api/members', {
+        const response = await request.post(`${BASE_URL}/api/members`, {
             headers,
             data: { name: originalName, gender: 'male' },
         });
@@ -38,22 +38,22 @@ test.describe('Lesson 5 - CRUD flow (serial)', () => {
     });
 
     test('2. READ - GET the member by id', async ({ request }) => {
-        const response = await request.get(`/api/members/${memberId}`, { headers });
+        const response = await request.get(`${BASE_URL}/api/members/${memberId}`, { headers });
 
         expect(response.status()).toBe(200);
         expect(await response.json()).toEqual([{ id: memberId, name: originalName, gender: 'male' }]);
     });
 
     test('2b. READ - the member shows up in the full list and in the filter', async ({ request }) => {
-        const all: Member[] = await (await request.get('/api/members', { headers })).json();
+        const all: Member[] = await (await request.get(`${BASE_URL}/api/members`, { headers })).json();
         expect(all).toContainEqual({ id: memberId, name: originalName, gender: 'male' });
 
-        const males: Member[] = await (await request.get('/api/members', { headers, params: { gender: 'male' } })).json();
+        const males: Member[] = await (await request.get(`${BASE_URL}/api/members`, { headers, params: { gender: 'male' } })).json();
         expect(males.map(m => m.id)).toContain(memberId);
     });
 
     test('3. UPDATE - PUT new name and gender', async ({ request }) => {
-        const response = await request.put(`/api/members/${memberId}`, {
+        const response = await request.put(`${BASE_URL}/api/members/${memberId}`, {
             headers,
             data: { name: updatedName, gender: 'female' },
         });
@@ -67,7 +67,7 @@ test.describe('Lesson 5 - CRUD flow (serial)', () => {
 
     test('3b. UPDATE - check the change was saved (GET again)', async ({ request }) => {
         // Don't trust the PUT response alone: read the record back
-        const response = await request.get(`/api/members/${memberId}`, { headers });
+        const response = await request.get(`${BASE_URL}/api/members/${memberId}`, { headers });
         const [member] = await response.json();
 
         expect(member.name).toBe(updatedName);
@@ -75,7 +75,7 @@ test.describe('Lesson 5 - CRUD flow (serial)', () => {
     });
 
     test('4. DELETE - remove the member', async ({ request }) => {
-        const response = await request.delete(`/api/members/${memberId}`, { headers });
+        const response = await request.delete(`${BASE_URL}/api/members/${memberId}`, { headers });
 
         expect(response.status()).toBe(200);
         const body = await response.json();
@@ -88,7 +88,7 @@ test.describe('Lesson 5 - CRUD flow (serial)', () => {
         // Note: this API gives new members "highest id + 1", so a freed id can be reused
         // by a test running in parallel. Checking by our unique name is safer than
         // expecting GET /api/members/:id to return 404.
-        const all: Member[] = await (await request.get('/api/members', { headers })).json();
+        const all: Member[] = await (await request.get(`${BASE_URL}/api/members`, { headers })).json();
 
         expect(all.find(m => m.name === updatedName)).toBeUndefined();
     });
@@ -102,21 +102,21 @@ test.describe('Lesson 5 - CRUD in a single test', () => {
         const name = uniqueName('One');
 
         // CREATE
-        const createRes = await request.post('/api/members', { headers, data: { name, gender: 'female' } });
+        const createRes = await request.post(`${BASE_URL}/api/members`, { headers, data: { name, gender: 'female' } });
         expect(createRes.status()).toBe(201);
         const { id } = await createRes.json();
 
         try {
             // READ
-            const readRes = await request.get(`/api/members/${id}`, { headers });
+            const readRes = await request.get(`${BASE_URL}/api/members/${id}`, { headers });
             expect((await readRes.json())[0].name).toBe(name);
 
             // UPDATE
-            const updRes = await request.put(`/api/members/${id}`, { headers, data: { gender: 'male' } });
+            const updRes = await request.put(`${BASE_URL}/api/members/${id}`, { headers, data: { gender: 'male' } });
             expect((await updRes.json()).member.gender).toBe('male');
         } finally {
             // DELETE (in finally, so it cleans up even if an assertion above fails)
-            const delRes = await request.delete(`/api/members/${id}`, { headers });
+            const delRes = await request.delete(`${BASE_URL}/api/members/${id}`, { headers });
             expect(delRes.status()).toBe(200);
         }
     });

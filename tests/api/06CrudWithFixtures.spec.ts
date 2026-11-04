@@ -3,14 +3,15 @@
 // The earlier lessons repeat the auth header and clean up by hand. fixtures/api.ts
 // moves that setup into custom fixtures:
 //
-//   api          -> an APIRequestContext with baseURL + Basic Auth already set
+//   api          -> an APIRequestContext with BASE_URL + Basic Auth set in code, so short
+//                   paths like '/api/members' work (nothing is configured in playwright.config.ts)
 //   createMember -> creates a member for this test and deletes it after the test
 //
 // Each test gets its own fresh data, so the tests are independent and can run in parallel.
 //
-// Run:  npx playwright test --project=api tests/api/06CrudWithFixtures.spec.ts
+// Run:  npx playwright test tests/api/06CrudWithFixtures.spec.ts
 
-import { test, expect, uniqueName, Member } from '../../fixtures/api';
+import { test, expect, uniqueName, Member, BASE_URL } from '../../fixtures/api';
 
 test.describe('Lesson 6 - READ', () => {
 
@@ -123,7 +124,8 @@ test.describe('Lesson 6 - DELETE', () => {
 });
 
 test.describe('Lesson 6 - Unauthenticated CRUD', () => {
-    // The plain `request` fixture has no auth, so every operation must be refused
+    // The plain `request` fixture has no auth (and no baseURL), so we pass full URLs
+    // and every operation must be refused
     const calls = [
         { method: 'GET', path: '/api/members' },
         { method: 'GET', path: '/api/members/1' },
@@ -134,7 +136,7 @@ test.describe('Lesson 6 - Unauthenticated CRUD', () => {
     for (const { method, path } of calls) {
         test(`${method} ${path} without auth returns 401`, async ({ request }) => {
             // request.fetch() takes the HTTP method as an option
-            const response = await request.fetch(path, { method, data: { name: 'No Auth', gender: 'male' } });
+            const response = await request.fetch(`${BASE_URL}${path}`, { method, data: { name: 'No Auth', gender: 'male' } });
             expect(response.status()).toBe(401);
         });
     }
