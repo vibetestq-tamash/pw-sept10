@@ -30,6 +30,13 @@ export function bearerAuthHeader(token: string) {
     return { Authorization: `Bearer ${token}` };
 }
 
+/** Logs in at POST /api/auth/login and returns the JWT access token. Reuse it in any test. */
+export async function getJwtToken(request: APIRequestContext, username = 'admin', password = 'admin') {
+    const response = await request.post(`${BASE_URL}/api/auth/login`, { data: { username, password } });
+    expect(response.status(), await response.text()).toBe(200);
+    return (await response.json()).access_token as string;
+}
+
 /**
  * The API only accepts names made of letters and spaces, 4 to 25 characters long.
  * Date.now() is digits only, so we map every digit to a letter (0->a, 1->b, ...)

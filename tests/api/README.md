@@ -33,6 +33,7 @@ There is **no `baseURL` in `playwright.config.ts`**. The API address lives in on
 | `04Authentication.spec.ts` | Basic Auth (manual header, helper, `httpCredentials`, `test.use`), API key, Bearer JWT (login, then send the token; decode claims), OAuth2 client credentials; negative auth tests |
 | `05CrudFlow.spec.ts` | End-to-end Create → Read → Update → Delete in `serial` mode with a shared id, the same flow in one test using `try/finally`, and PATCH (not supported: 404) |
 | `06CrudWithFixtures.spec.ts` | Custom fixtures (`api`, a request context created in code with `BASE_URL` + auth, and `createMember`, both in `fixtures/api.ts`) with automatic cleanup, `test.step`, partial PUT updates, negative PUT/DELETE tests, `request.fetch` with a method |
+| `07ReuseAuthentication.spec.ts` | Reusing the login: a headers constant, `test.use({ extraHTTPHeaders })`, `test.use({ httpCredentials })`, a token fetched once in `beforeAll`, and the `getJwtToken()` helper |
 
 ## Switching the auth strategy
 
