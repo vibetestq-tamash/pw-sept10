@@ -34,7 +34,7 @@ The finished tests for every topic are in `tests/api/`. Read a section, then ope
 
 **Going further**
 15. [Other body formats: form and file upload](#15-other-body-formats-form-and-file-upload)
-16. [Authentication in Playwright](#16-authentication-in-playwright)
+16. [Authentication in Playwright](#16-authentication-in-playwright) (including reusing the login)
 17. [From requirement to test cases](#17-from-requirement-to-test-cases)
 18. [A full CRUD test](#18-a-full-crud-test)
 19. [Test data and cleanup](#19-test-data-and-cleanup)
@@ -87,7 +87,8 @@ pw-sept10/
     ├── 03RequestData.spec.ts         sections 8, 15, 17
     ├── 04Authentication.spec.ts      section 16
     ├── 05CrudFlow.spec.ts            sections 9-11, 18
-    └── 06CrudWithFixtures.spec.ts    sections 19, 20
+    ├── 06CrudWithFixtures.spec.ts    sections 19, 20
+    └── 07ReuseAuthentication.spec.ts section 16 (reusing the login)
 ```
 
 ---
@@ -916,6 +917,89 @@ const response = await request.get(`${BASE_URL}/api/members`, {
 });
 ```
 
+### Reusing the login: write it once
+
+Repeating the login on every request is noisy, and logging in for a token in every test is slow.
+Pick the simplest option that fits. All of them live in your test code, not in `playwright.config.ts`.
+
+| # | Option | Best for |
+|---|--------|----------|
+| 1 | One `headers` constant per file | your first test files |
+| 2 | `test.use({ extraHTTPHeaders })` | a file or `describe` block where every request needs the same header |
+| 3 | `test.use({ httpCredentials })` | Basic Auth, the same idea |
+| 4 | Token once in `beforeAll` | JWT / OAuth2: log in once, reuse the token |
+| 5 | A login helper function | getting a token in any file in one line |
+| 6 | A custom fixture | everything above, shared by every file (section 20) |
+
+**1. One constant per file:** write it once, pass it on every call.
+
+```ts
+const headers = basicAuthHeader('admin', 'admin');
+
+await request.get(`${BASE_URL}/api/members`, { headers });
+await request.get(`${BASE_URL}/api/members/1`, { headers });
+```
+
+**2. `test.use({ extraHTTPHeaders })`:** every request in the block gets the header automatically.
+
+```ts
+test.describe('Logged in', () => {
+    test.use({ extraHTTPHeaders: basicAuthHeader('admin', 'admin') });
+
+    test('no headers option needed', async ({ request }) => {
+        const response = await request.get(`${BASE_URL}/api/members`);
+        expect(response.status()).toBe(200);
+    });
+});
+```
+
+Put `test.use(...)` at the top of a file (outside any `describe`) to apply it to the whole file.
+Headers you pass on a single call still win, which is handy for a negative test.
+
+**3. `test.use({ httpCredentials })`:** the same for Basic Auth. Playwright answers the server's 401 challenge for you.
+
+```ts
+test.use({ httpCredentials: { username: 'admin', password: 'admin' } });
+```
+
+**4. Token once in `beforeAll`:** log in once and share the token with every test in the block.
+
+```ts
+let token: string;
+
+test.beforeAll(async ({ playwright }) => {
+    // the `request` fixture only exists inside a test, so make a context here
+    const context = await playwright.request.newContext();
+    const login = await context.post(`${BASE_URL}/api/auth/login`, {
+        data: { username: 'admin', password: 'admin' },
+    });
+    token = (await login.json()).access_token;
+    await context.dispose();
+});
+
+test('uses the saved token', async ({ request }) => {
+    const response = await request.get(`${BASE_URL}/api/members`, {
+        headers: bearerAuthHeader(token),
+    });
+    expect(response.status()).toBe(200);
+});
+```
+
+- `beforeAll` runs once per **worker**, so with several workers you may see a few logins. That's fine.
+- Tokens expire (here after 1 hour). Get a fresh one per run, and never paste a token into the code.
+
+**5. A login helper:** `getJwtToken()` in `fixtures/api.ts` logs in and returns the token:
+
+```ts
+import { getJwtToken, bearerAuthHeader } from '../../fixtures/api';
+
+const token = await getJwtToken(request);
+await request.get(`${BASE_URL}/api/members`, { headers: bearerAuthHeader(token) });
+```
+
+> 📄 `tests/api/07ReuseAuthentication.spec.ts`. Run the token parts with the API in JWT mode:
+> `AUTH_MODE=jwt npx playwright test tests/api/07ReuseAuthentication.spec.ts`
+
 ### Negative auth tests: always include these
 
 ```ts
@@ -1418,4 +1502,4 @@ for (const row of rows) { test(`Case ${row.case}`, async ({ request }) => { /* .
 ---
 
 **Next steps:** run `npx playwright test tests/api`, open the report with `npx playwright show-report`,
-then read the lesson files in order from `01` to `06`. Each one builds on the one before.
+then read the lesson files in order from `01` to `07`. Each one builds on the one before.
