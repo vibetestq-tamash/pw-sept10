@@ -5,6 +5,8 @@
 //   U  PUT    /api/members/:id    -> 200 + { msg, member }
 //   D  DELETE /api/members/:id    -> 200 + { msg, members }
 //
+// PATCH (partial update) does not exist in this API. The last block shows how it is refused.
+//
 // The steps depend on each other (they share the id from the POST), so the block runs
 // in 'serial' mode: the tests run in order, and if one fails the rest are skipped.
 //
@@ -91,6 +93,30 @@ test.describe('Lesson 5 - CRUD flow (serial)', () => {
         const all: Member[] = await (await request.get(`${BASE_URL}/api/members`, { headers })).json();
 
         expect(all.find(m => m.name === updatedName)).toBeUndefined();
+    });
+});
+
+test.describe('Lesson 5 - PATCH (not supported by this API)', () => {
+    // PATCH means "update only the fields I send". Many APIs have it; this one does not.
+    // Testing that an unsupported method is refused properly is a valid test too.
+
+    test('PATCH returns 404 with an HTML error page', async ({ request }) => {
+        const response = await request.patch(`${BASE_URL}/api/members/1`, {
+            headers,
+            data: { gender: 'male' },
+        });
+
+        expect(response.status()).toBe(404);
+        // The body is HTML, not JSON, so read it with text(). json() would throw here.
+        expect(response.headers()['content-type']).toContain('text/html');
+        expect(await response.text()).toContain('Cannot PATCH /api/members/1');
+    });
+
+    test('PATCH without login is refused first with 401', async ({ request }) => {
+        // The login check runs before the server looks for the endpoint
+        const response = await request.patch(`${BASE_URL}/api/members/1`, { data: { gender: 'male' } });
+
+        expect(response.status()).toBe(401);
     });
 });
 

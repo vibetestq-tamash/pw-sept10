@@ -4,7 +4,8 @@ These lessons test the **EmployeeRestSample** API
 ([QtpSudhakarTrainings/EmployeeRestSample](https://github.com/QtpSudhakarTrainings/EmployeeRestSample))
 with Playwright's `request` fixture. No browser is used.
 
-> **New to API testing?** Start with the step-by-step guide: [API-Testing-Guide.md](../../API-Testing-Guide.md)
+> **New to API testing?** Read [API-Basics.md](../../API-Basics.md) first (concepts, no code),
+> then [API-Testing-Guide.md](../../API-Testing-Guide.md) (step by step in Playwright).
 
 ## Setup
 
@@ -28,9 +29,9 @@ There is **no `baseURL` in `playwright.config.ts`**. The API address lives in on
 |------|-----------------|
 | `01RequestBasics.spec.ts` | `request.get`, full URLs from a `BASE_URL` constant, `status()`, `ok()`, `toBeOK()`, headers, `json()` vs `text()`, checking response shape, response time, `failOnStatusCode` |
 | `02Parameters.spec.ts` | Path params (`/members/1`), query params (`params` option, `URLSearchParams`), header params, 404 cases |
-| `03RequestData.spec.ts` | Body formats: `data` (JSON object / raw string), `form` (urlencoded), `multipart` (file upload); data-driven tests from `testdata/members.json`; cleanup in `afterEach` |
+| `03RequestData.spec.ts` | Body formats: `data` (JSON object / raw string), `form` (urlencoded), `multipart` (file upload); data-driven tests from `testdata/members.json`; boundary tests for the name length; cleanup in `afterEach` |
 | `04Authentication.spec.ts` | Basic Auth (manual header, helper, `httpCredentials`, `test.use`), API key, Bearer JWT (login, then send the token; decode claims), OAuth2 client credentials; negative auth tests |
-| `05CrudFlow.spec.ts` | End-to-end Create → Read → Update → Delete in `serial` mode with a shared id, plus the same flow in one test using `try/finally` |
+| `05CrudFlow.spec.ts` | End-to-end Create → Read → Update → Delete in `serial` mode with a shared id, the same flow in one test using `try/finally`, and PATCH (not supported: 404) |
 | `06CrudWithFixtures.spec.ts` | Custom fixtures (`api`, a request context created in code with `BASE_URL` + auth, and `createMember`, both in `fixtures/api.ts`) with automatic cleanup, `test.step`, partial PUT updates, negative PUT/DELETE tests, `request.fetch` with a method |
 
 ## Switching the auth strategy

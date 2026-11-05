@@ -124,6 +124,30 @@ test.describe('Lesson 3 - Test data from a JSON file', () => {
     });
 });
 
+test.describe('Lesson 3 - Boundary values for the name length (4 to 25)', () => {
+    // Test right at the edges of a rule: the last valid and first invalid values
+    const cases = [
+        { length: 3, status: 400 },
+        { length: 4, status: 201 },
+        { length: 25, status: 201 },
+        { length: 26, status: 400 },
+    ];
+
+    for (const { length, status } of cases) {
+        test(`A name of ${length} characters returns ${status}`, async ({ request }) => {
+            const name = 'A'.repeat(length);
+            const response = await request.post(`${BASE_URL}/api/members`, { headers, data: { name, gender: 'male' } });
+
+            expect(response.status()).toBe(status);
+            if (status === 201) {
+                createdIds.push((await response.json()).id); // afterEach deletes it
+            } else {
+                expect((await response.json()).msg).toBe('Name should be 4 to 25 characters long');
+            }
+        });
+    }
+});
+
 test.describe('Lesson 3 - File upload with `multipart`', () => {
 
     test('Upload a file from disk', async ({ request }) => {
