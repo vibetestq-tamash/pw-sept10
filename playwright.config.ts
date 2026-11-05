@@ -44,17 +44,27 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-    navigationTimeout:20000,
-    actionTimeout:10000,
+    navigationTimeout: 20000,
+    actionTimeout: 10000,
     screenshot: 'off',
     video: 'off'
   },
 
   /* Configure projects for major browsers */
   projects: [
+    { name: 'setup', testMatch: /.*setuplogin/ },
+
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'smoke',
+      testMatch: /.*useauth/,
+
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: './.auth/user.json',
+        headless: false
+      },
+      dependencies: ['setup'],
+
     },
 
     // {

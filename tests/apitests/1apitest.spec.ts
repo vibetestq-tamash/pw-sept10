@@ -21,4 +21,5 @@ test("API test example for reading using basic auth", async ({ request }) => {
 
     const responseBody = await response.body();
     console.log(responseBody.toString());
+    await request.storageState({path:".auth/apiuser.json"});
 });
