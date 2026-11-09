@@ -1,6 +1,15 @@
 import { test, expect } from '@playwright/test';
 
 test('test', async ({ page }) => {
+
+  page.on("request", request => 
+    {
+      if (request.url().includes('api')) {
+        console.log('>>', request.method(), request.url())
+      }
+    }
+  );
+
   await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
   await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
   await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');

@@ -52,20 +52,26 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
-    { name: 'setup', testMatch: /.*setuplogin/ },
 
     {
-      name: 'smoke',
-      testMatch: /.*useauth/,
-
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: './.auth/user.json',
-        headless: false
-      },
-      dependencies: ['setup'],
-
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
     },
+
+    // { name: 'setup', testMatch: /.*setuplogin/ },
+
+    // {
+    //   name: 'smoke',
+    //   testMatch: /.*useauth/,
+
+    //   use: {
+    //     ...devices['Desktop Chrome'],
+    //     storageState: './.auth/user.json',
+    //     headless: false
+    //   },
+    //   dependencies: ['setup'],
+
+    // },
 
     // {
     //   name: 'firefox',
