@@ -15,3 +15,11 @@ report-history.json
 
 my-awesome-report.html
 .env*
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
+add-employee-final-form-screenshot.png
+add-employee-form.png
+add-employee-form.yml
+employee_details.png
+employee_list.png
+employee-list.yml
