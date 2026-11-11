@@ -1,58 +1,83 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from "../../../fixtures/appbase";
+import { appUrl } from "../../../testdata/app";
+import { errorHandling, messages } from "../../../testdata/add-employee-error-happy.json";
+
+test.describe('Add Employee - Error Handling', () => {
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Handle server error during employee creation', async ({ App }) => {
+    const data = errorHandling.serverErrorDuringSave;
+
+    // Step 1: Navigate to Add Employee page
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Simulate a server error by aborting API POST requests
+    await App.addEmployeePage.blockApiPostRequests();
+
+    // Step 3: Fill employee details and save
+    await App.addEmployeePage.enterFirstName(data.firstName);
+    await App.addEmployeePage.enterLastName(data.lastName);
+    await App.addEmployeePage.enterUniqueEmployeeId();
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 4: Verify the form stays on screen and keeps the entered data
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+    await App.addEmployeePage.verifyFirstNameValue(data.firstName);
+
+    // Step 5: Remove the API mock
+    await App.addEmployeePage.unblockApiRequests();
+  });
+});
 
 test.describe('Add Employee - Error Handling and Recovery', () => {
-  test('Handle server error response', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Setup route to mock server error
-    await page.route('**/api/**', route => {
-      if (route.request().method() === 'POST') {
-        route.abort('failed');
-      } else {
-        route.continue();
-      }
-    });
-    
-    // Fill employee details
-    await page.getByRole('textbox', { name: 'First Name' }).fill('ServerError');
-    await page.getByRole('textbox', { name: 'Last Name' }).fill('Test');
-    
-    // Try to save
-    await page.getByRole('button', { name: 'Save' }).click();
-    
-    // Wait for error response
-    await page.waitForTimeout(1000);
-    
-    // Verify form is still usable
-    const firstNameField = page.getByRole('textbox', { name: 'First Name' });
-    await expect(firstNameField).toHaveValue('ServerError');
-    
-    // Verify we're still on the form
-    const addEmployeeHeading = page.locator('text=Add Employee');
-    await expect(addEmployeeHeading).toBeVisible();
-    
-    // Clean up route mock
-    await page.unroute('**/api/**');
-    
-    // Retry with working connection
-    await page.getByRole('button', { name: 'Save' }).click();
-    
-    // Verify eventual success
-    await expect(page.locator('text=Successfully Saved')).toBeVisible({ timeout: 10000 });
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Handle server error response', async ({ App }) => {
+    const data = errorHandling.serverErrorRecovery;
+
+    // Step 1: Navigate to Add Employee form
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Simulate a server error by aborting API POST requests
+    await App.addEmployeePage.blockApiPostRequests();
+
+    // Step 3: Fill employee details and attempt to save (will fail)
+    await App.addEmployeePage.enterFirstName(data.firstName);
+    await App.addEmployeePage.enterLastName(data.lastName);
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 4: Verify the form remains usable after the error
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+    await App.addEmployeePage.verifyFirstNameValue(data.firstName);
+
+    // Step 5: Remove the API mock and retry the save
+    await App.addEmployeePage.unblockApiRequests();
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 6: Verify eventual success
+    await App.addEmployeePage.verifyExpectedMessageDisplayed(messages.successSaved);
   });
 });

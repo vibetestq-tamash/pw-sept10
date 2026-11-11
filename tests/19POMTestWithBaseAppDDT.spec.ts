@@ -1,7 +1,7 @@
 import { test } from "../fixtures/appbase";
 import { employees } from "../testdata/emp.json";
 
-test.describe.configure({ mode: 'serial' });
+// test.describe.configure({ mode: 'serial' });
 
 test.describe('Data Driven Tests', () => {
 

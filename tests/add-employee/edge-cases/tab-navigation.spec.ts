@@ -1,65 +1,68 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from '../../../fixtures/appbase';
+import { appUrl } from '../../../testdata/app';
+import { edgeCases } from '../../../testdata/add-employee-data-persistence-edge.json';
 
-test.describe('Add Employee - Edge Cases and Boundary Conditions', () => {
-  test('Form field tab navigation', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Focus on First Name field
-    const firstNameField = page.getByRole('textbox', { name: 'First Name' });
-    await firstNameField.focus();
-    
-    // Tab through fields
-    await page.press('Tab');
-    // Should move to Middle Name
-    const middleNameField = page.getByRole('textbox', { name: 'Middle Name' });
-    await expect(middleNameField).toBeFocused();
-    
-    // Tab to Last Name
-    await page.press('Tab');
-    const lastNameField = page.getByRole('textbox', { name: 'Last Name' });
-    await expect(lastNameField).toBeFocused();
-    
-    // Enter values using Tab navigation
-    await firstNameField.fill('Tab');
-    await page.press('Tab');
-    await page.type('Navigation');
-    await page.press('Tab');
-    await page.type('Test');
-    
-    // Tab to other interactive elements
-    // Continue tabbing to reach Save/Cancel buttons
-    let tabCount = 0;
-    while (tabCount < 10) {
-      await page.press('Tab');
-      tabCount++;
-      
-      const focusedElement = await page.evaluate(() => {
-        const active = document.activeElement as HTMLElement;
-        return active?.tagName + ':' + active?.textContent?.substring(0, 20);
-      });
-      
-      // If we reached a button, verify it's interactive
-      if (focusedElement?.includes('BUTTON')) {
-        break;
-      }
-    }
-    
-    // Verify we can navigate using Tab
-    expect(tabCount).toBeGreaterThan(0);
+test.describe('Add Employee - Edge Cases', () => {
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Navigate between form fields using Tab', async ({ App }) => {
+    const tab = edgeCases.tabNavigation;
+
+    // Step 1: Open the Add Employee form from PIM
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill first, middle and last name in turn
+    await App.addEmployeePage.enterFirstName(tab.firstName);
+    await App.addEmployeePage.enterMiddleName(tab.middleName);
+    await App.addEmployeePage.enterLastName(tab.lastName);
+    await App.addEmployeePage.enterUniqueEmployeeId();
+
+    // Step 3: Save the employee
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 4: Verify the employee was created
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
+  });
+
+  test('Form field tab navigation', async ({ App }) => {
+    const tab = edgeCases.tabNavigation;
+
+    // Step 1: Open the Add Employee form from PIM
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Focus First Name and press Tab to reach Middle Name
+    await App.addEmployeePage.focusOnFirstName();
+    await App.addEmployeePage.pressTabKey();
+    await App.addEmployeePage.verifyMiddleNameFocused();
+
+    // Step 3: Press Tab again to reach Last Name
+    await App.addEmployeePage.pressTabKey();
+    await App.addEmployeePage.verifyLastNameFocused();
+
+    // Step 4: Enter the first and last name
+    await App.addEmployeePage.enterFirstName(tab.firstName);
+    await App.addEmployeePage.enterLastName(tab.lastName);
+
+    // Step 5: Keep pressing Tab until a button receives focus
+    await App.addEmployeePage.pressTabUntilButtonFocused(tab.maxTabPresses);
+
+    // Step 6: Verify a button is reachable by keyboard
+    await App.addEmployeePage.verifyButtonFocused();
   });
 });

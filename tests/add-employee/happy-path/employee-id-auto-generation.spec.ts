@@ -1,49 +1,47 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from "../../../fixtures/appbase";
+import { appUrl } from "../../../testdata/app";
+import { happyPath } from "../../../testdata/add-employee.json";
+import { messages } from "../../../testdata/add-employee-error-happy.json";
 
 test.describe('Add Employee - Happy Path Scenarios', () => {
-  test('Employee ID is auto-generated correctly', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Capture the auto-generated Employee ID (5th input: after First/Middle/Last Name and File input)
-    const employeeIdField = page.locator('input').nth(5);
-    let firstEmployeeId = '';
-    firstEmployeeId = await employeeIdField.inputValue() || '';
-    expect(firstEmployeeId).toMatch(/^\d+$/);
-    
-    // Enter employee details
-    await page.getByRole('textbox', { name: 'First Name' }).fill('Robert');
-    await page.getByRole('textbox', { name: 'Last Name' }).fill('Johnson');
-    
-    // Save first employee
-    await page.getByRole('button', { name: 'Save' }).click();
-    
-    // Verify success
-    await expect(page.locator('text=Successfully Saved')).toBeVisible();
-    
-    // Navigate to Add another Employee
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Verify new Employee ID is incremented
-    const secondEmployeeIdField = page.locator('input').nth(5);
-    const secondEmployeeId = await secondEmployeeIdField.inputValue() || '';
-    
-    expect(secondEmployeeId).not.toBe(firstEmployeeId);
-    expect(parseInt(secondEmployeeId)).toBeGreaterThan(parseInt(firstEmployeeId));
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Employee ID is auto-generated correctly', async ({ App }) => {
+    // Step 1: Navigate to Add Employee page
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Verify the auto-generated Employee Id is numeric and capture it
+    await App.addEmployeePage.verifyEmployeeIdIsNumeric();
+    const firstEmployeeId = (await App.addEmployeePage.getEmployeeIdValue()) ?? '';
+
+    // Step 3: Fill the name fields and save the first employee
+    await App.addEmployeePage.enterFirstName(happyPath.requiredFieldsOnly.firstName);
+    await App.addEmployeePage.enterLastName(happyPath.requiredFieldsOnly.lastName);
+    await App.addEmployeePage.clickOnSaveButton();
+    await App.addEmployeePage.verifyExpectedMessageDisplayed(messages.successSaved);
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
+
+    // Step 4: Navigate back to Add Employee for a second employee
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 5: Verify the new Employee Id is numeric and incremented from the first one
+    await App.addEmployeePage.verifyEmployeeIdIsNumeric();
+    await App.addEmployeePage.verifyEmployeeIdGreaterThan(firstEmployeeId);
   });
 });

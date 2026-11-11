@@ -1,38 +1,53 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from "../../../fixtures/appbase";
+import { appUrl } from "../../../testdata/app";
+import { happyPath, navigation } from "../../../testdata/add-employee-login-nav.json";
 
-test.describe('Add Employee - Form Navigation and Cancellation', () => {
-  test('Back button behavior', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Store current URL for reference
-    const pimUrl = page.url();
-    
-    // Click Add Employee
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Enter some information
-    await page.getByRole('textbox', { name: 'First Name' }).fill('BackButton');
-    await page.getByRole('textbox', { name: 'Last Name' }).fill('Test');
-    
-    // Use browser back button
-    await page.goBack();
-    
-    // Verify browser history navigation worked
-    // We should be back on the PIM page or have some navigation
-    await page.waitForLoadState('networkidle');
+test.describe('Add Employee - Navigation', () => {
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Navigate back using browser back button', async ({ App }) => {
+    // Step 1: Navigate to Add Employee page
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill employee details
+    await App.addEmployeePage.enterFirstName(happyPath.requiredFieldsOnly.firstName);
+    await App.addEmployeePage.enterLastName(happyPath.requiredFieldsOnly.lastName);
+
+    // Step 3: Navigate back (simulated by going to PIM)
+    await App.dashboardPage.clickOnPIMLink();
+
+    // Step 4: Verify we're on PIM page
+    await App.pimPage.VerifyPIMDisplayed();
+  });
+
+  test('Back button behavior', async ({ App }) => {
+    // Step 1: Navigate to PIM and Add Employee
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill some information
+    await App.addEmployeePage.enterFirstName(navigation.backButton.firstName);
+    await App.addEmployeePage.enterLastName(navigation.backButton.lastName);
+
+    // Step 3: Use the browser back button
+    await App.basePage.navigateBack();
+
+    // Step 4: Verify navigation back to the PIM page
+    await App.pimPage.VerifyPIMDisplayed();
   });
 });

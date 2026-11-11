@@ -1,64 +1,76 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from '../../../fixtures/appbase';
+import { appUrl } from '../../../testdata/app';
+import { dataPersistence } from '../../../testdata/add-employee-data-persistence-edge.json';
 
-test.describe('Add Employee - Data Persistence and Verification', () => {
-  test('View employee details after creation', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Create employee with details
-    const firstName = 'ViewDetails';
-    const lastName = `Employee${Date.now()}`;
-    const middleName = 'Test';
-    
-    await page.getByRole('textbox', { name: 'First Name' }).fill(firstName);
-    await page.getByRole('textbox', { name: 'Middle Name' }).fill(middleName);
-    await page.getByRole('textbox', { name: 'Last Name' }).fill(lastName);
-    
-    // Save employee
-    await page.getByRole('button', { name: 'Save' }).click();
-    
-    // Verify success
-    await expect(page.locator('text=Successfully Saved')).toBeVisible();
-    
-    // The form should redirect or show employee details
-    // Try to verify the employee name is displayed
-    await expect(page.locator(`text=${firstName}`)).toBeVisible({ timeout: 5000 });
-    
-    // Try to navigate to Employee List to find and click on the employee
-    await page.getByRole('link', { name: 'Employee List' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Search for employee
-    const searchField = page.locator('input[placeholder*="Search"]').first();
-    if (await searchField.isVisible()) {
-      await searchField.fill(lastName);
-      await page.waitForLoadState('networkidle');
-    }
-    
-    // Click on employee row to view details
-    const employeeRow = page.locator(`text=${firstName}`);
-    if (await employeeRow.isVisible()) {
-      await employeeRow.click();
-      await page.waitForLoadState('networkidle');
-      
-      // Verify details are displayed
-      await expect(page.locator(`text=${firstName}`)).toBeVisible();
-      await expect(page.locator(`text=${middleName}`)).toBeVisible();
-      await expect(page.locator(`text=${lastName}`)).toBeVisible();
-    }
+test.describe('Add Employee - Data Persistence', () => {
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('View and verify employee details after creation', async ({ App }) => {
+    const employee = dataPersistence.withMiddleName;
+
+    // Step 1: Open the Add Employee form from PIM
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill in first, middle and last name and save
+    await App.addEmployeePage.enterFirstName(employee.firstName);
+    await App.addEmployeePage.enterMiddleName(employee.middleName);
+    await App.addEmployeePage.enterLastName(employee.lastName);
+    await App.addEmployeePage.enterUniqueEmployeeId();
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 3: Verify all name fields on Personal Details
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
+    await App.employeeDetailsPage.verifyEmployeeFirstName(employee.firstName);
+    await App.employeeDetailsPage.verifyEmployeeMiddleName(employee.middleName);
+    await App.employeeDetailsPage.verifyEmployeeLastName(employee.lastName);
+  });
+
+  test('View employee details after creation', async ({ App }) => {
+    const employee = dataPersistence.viewDetailsEmployee;
+    const lastName = `${employee.lastNamePrefix}${Date.now()}`;
+
+    // Step 1: Open the Add Employee form from PIM
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill in first, middle and unique last name and save
+    await App.addEmployeePage.enterFirstName(employee.firstName);
+    await App.addEmployeePage.enterMiddleName(employee.middleName);
+    await App.addEmployeePage.enterLastName(lastName);
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 3: Verify the save succeeded
+    await App.addEmployeePage.verifySuccessMessageDisplayed();
+
+    // Step 4: Open Employee List from PIM and search for the employee
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnEmployeeListLink();
+    await App.employeeListPage.VerifyEmployeeListDisplayed();
+    await App.employeeListPage.searchEmployee(lastName);
+
+    // Step 5: Open the employee's details from the list
+    await App.employeeListPage.clickOnEmployeeInList(lastName);
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
+
+    // Step 6: Verify the stored details
+    await App.employeeDetailsPage.verifyEmployeeFirstName(employee.firstName);
+    await App.employeeDetailsPage.verifyEmployeeMiddleName(employee.middleName);
+    await App.employeeDetailsPage.verifyEmployeeLastName(lastName);
   });
 });

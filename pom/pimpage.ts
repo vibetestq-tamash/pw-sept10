@@ -5,11 +5,13 @@ export class PIMPage extends BasePage {
 
     private hdrPIM:Locator;
     private lnkAddEmployee:Locator;
+    private lnkEmployeeList: Locator;
 
     constructor(page:Page){
         super(page);
         this.hdrPIM = page.getByRole('heading', { name: 'PIM' }).describe("PIM Header");
         this.lnkAddEmployee = page.getByRole('link', { name: 'Add Employee' }).describe("Add Employee Link")
+        this.lnkEmployeeList = page.getByRole('link', { name: 'Employee List' }).describe("Employee List Link");
     }
 
     public async VerifyPIMDisplayed(){
@@ -20,5 +22,10 @@ export class PIMPage extends BasePage {
     public async clickOnAddEmployeeLink(){
         await this.lnkAddEmployee.click();
         console.log("Clicked on "+ this.lnkAddEmployee.description())
+    }
+
+    public async clickOnEmployeeListLink(){
+        await this.lnkEmployeeList.click();
+        console.log("Clicked on "+ this.lnkEmployeeList.description())
     }
 }

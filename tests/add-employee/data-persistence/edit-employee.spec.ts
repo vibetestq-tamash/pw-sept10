@@ -1,74 +1,88 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from '../../../fixtures/appbase';
+import { appUrl } from '../../../testdata/app';
+import { dataPersistence } from '../../../testdata/add-employee-data-persistence-edge.json';
 
-test.describe('Add Employee - Data Persistence and Verification', () => {
-  test('Edit employee after creation', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Create employee
-    const originalLastName = `Original${Date.now()}`;
-    await page.getByRole('textbox', { name: 'First Name' }).fill('EditTest');
-    await page.getByRole('textbox', { name: 'Last Name' }).fill(originalLastName);
-    
-    // Save employee
-    await page.getByRole('button', { name: 'Save' }).click();
-    
-    // Verify success
-    await expect(page.locator('text=Successfully Saved')).toBeVisible();
-    
-    // Navigate to Employee List
-    await page.getByRole('link', { name: 'Employee List' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Search for employee
-    const searchField = page.locator('input[placeholder*="Search"]').first();
-    if (await searchField.isVisible()) {
-      await searchField.fill('EditTest');
-      await page.waitForLoadState('networkidle');
-    }
-    
-    // Click on employee to open details
-    const employeeLink = page.locator('text=EditTest').first();
-    if (await employeeLink.isVisible()) {
-      await employeeLink.click();
-      await page.waitForLoadState('networkidle');
-      
-      // Look for Edit button or make Last Name field editable
-      const editButton = page.locator('button:has-text("Edit")');
-      if (await editButton.isVisible()) {
-        await editButton.click();
-      }
-      
-      // Try to modify the last name
-      const lastNameField = page.getByRole('textbox', { name: 'Last Name' });
-      if (await lastNameField.isVisible()) {
-        // Clear and enter new name
-        await lastNameField.clear();
-        await lastNameField.fill('ModifiedName');
-        
-        // Save changes
-        const saveButton = page.getByRole('button', { name: 'Save' });
-        if (await saveButton.isVisible()) {
-          await saveButton.click();
-          
-          // Verify successful update
-          await expect(page.locator('text=Successfully Saved').or(page.locator('text=Updated'))).toBeVisible({ timeout: 5000 });
-        }
-      }
-    }
+test.describe('Add Employee - Data Persistence', () => {
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Edit employee after creation', async ({ App }) => {
+    const employee = dataPersistence.editEmployee;
+
+    // Step 1: Open the Add Employee form from PIM
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Create the employee and save
+    await App.addEmployeePage.enterFirstName(employee.firstName);
+    await App.addEmployeePage.enterLastName(employee.lastName);
+    await App.addEmployeePage.enterUniqueEmployeeId();
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 3: Verify the employee is shown on Personal Details
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
+
+    // Step 4: Open edit mode
+    await App.employeeDetailsPage.clickOnEditButton();
+
+    // Step 5: Change the first name and save
+    await App.addEmployeePage.clearFirstName();
+    await App.addEmployeePage.enterFirstName(employee.updatedFirstName);
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 6: Verify the updated first name is stored
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
+    await App.employeeDetailsPage.verifyEmployeeFirstName(employee.updatedFirstName);
+  });
+
+  test('Find and edit employee from Employee List', async ({ App }) => {
+    const employee = dataPersistence.editListEmployee;
+    const lastName = `${employee.lastNamePrefix}${Date.now()}`;
+
+    // Step 1: Open the Add Employee form from PIM
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Create the employee with a unique last name and save
+    await App.addEmployeePage.enterFirstName(employee.firstName);
+    await App.addEmployeePage.enterLastName(lastName);
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 3: Verify the save succeeded
+    await App.addEmployeePage.verifySuccessMessageDisplayed();
+
+    // Step 4: Open Employee List from PIM and search for the employee
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnEmployeeListLink();
+    await App.employeeListPage.VerifyEmployeeListDisplayed();
+    await App.employeeListPage.searchEmployee(lastName);
+
+    // Step 5: Open the employee's details from the list
+    await App.employeeListPage.clickOnEmployeeInList(lastName);
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
+
+    // Step 6: Edit the last name and save
+    await App.employeeDetailsPage.clickOnEditButton();
+    await App.addEmployeePage.clearLastName();
+    await App.addEmployeePage.enterLastName(employee.modifiedLastName);
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 7: Verify the updated last name is stored
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
+    await App.employeeDetailsPage.verifyEmployeeLastName(employee.modifiedLastName);
   });
 });

@@ -1,0 +1,31 @@
+{
+  "errorHandling": {
+    "networkErrorDuringSave": {
+      "firstName": "NetworkError",
+      "lastName": "Test"
+    },
+    "networkErrorRecovery": {
+      "firstName": "NetworkError",
+      "lastName": "Test"
+    },
+    "serverErrorDuringSave": {
+      "firstName": "ServerError",
+      "lastName": "Test"
+    },
+    "serverErrorRecovery": {
+      "firstName": "ServerError",
+      "lastName": "Test"
+    },
+    "sessionTimeoutDuringSave": {
+      "firstName": "SessionTimeout",
+      "lastName": "Test"
+    },
+    "sessionTimeoutDuringFormInteraction": {
+      "firstName": "SessionTimeout",
+      "lastName": "Test"
+    }
+  },
+  "messages": {
+    "successSaved": "Successfully Saved"
+  }
+}

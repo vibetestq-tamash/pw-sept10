@@ -1,50 +1,73 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from '../../../fixtures/appbase';
+import { appUrl } from '../../../testdata/app';
+import { dataPersistence } from '../../../testdata/add-employee-data-persistence-edge.json';
 
-test.describe('Add Employee - Data Persistence and Verification', () => {
-  test('Verify employee appears in employee list after creation', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Create unique employee name for search
-    const uniqueName = `Persistence${Date.now()}`;
-    const firstName = 'Persist';
-    const lastName = uniqueName.substring(0, 30);
-    
-    await page.getByRole('textbox', { name: 'First Name' }).fill(firstName);
-    await page.getByRole('textbox', { name: 'Last Name' }).fill(lastName);
-    
-    // Save employee
-    await page.getByRole('button', { name: 'Save' }).click();
-    
-    // Verify success
-    await expect(page.locator('text=Successfully Saved')).toBeVisible();
-    
-    // Navigate to Employee List
-    await page.getByRole('link', { name: 'Employee List' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Search for the employee
-    const searchField = page.locator('input[placeholder*="Search"]').first();
-    if (await searchField.isVisible()) {
-      await searchField.fill(lastName);
-      await page.waitForLoadState('networkidle');
-    }
-    
-    // Verify employee appears in list
-    await expect(page.locator(`text=${firstName}`)).toBeVisible();
+test.describe('Add Employee - Data Persistence', () => {
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Verify employee appears in employee list', async ({ App }) => {
+    const employee = dataPersistence.requiredFieldsEmployee;
+    // A unique last name lets the list check match exactly one row
+    const lastName = `${employee.lastName}${Date.now()}`;
+
+    // Step 1: Open the Add Employee form from PIM
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill in the employee and save
+    await App.addEmployeePage.enterFirstName(employee.firstName);
+    await App.addEmployeePage.enterLastName(lastName);
+    await App.addEmployeePage.enterUniqueEmployeeId();
+    await App.addEmployeePage.clickOnSaveButton();
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
+
+    // Step 3: Open Employee List from PIM
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnEmployeeListLink();
+    await App.employeeListPage.VerifyEmployeeListDisplayed();
+
+    // Step 4: Verify the new employee appears in the list
+    await App.employeeListPage.verifyEmployeeCountInList(lastName, 1);
+  });
+
+  test('Verify employee appears in employee list after creation', async ({ App }) => {
+    const employee = dataPersistence.listEmployee;
+    const lastName = `${employee.lastNamePrefix}${Date.now()}`;
+
+    // Step 1: Open the Add Employee form from PIM
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Create the employee with a unique last name and save
+    await App.addEmployeePage.enterFirstName(employee.firstName);
+    await App.addEmployeePage.enterLastName(lastName);
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 3: Verify the save succeeded
+    await App.addEmployeePage.verifySuccessMessageDisplayed();
+
+    // Step 4: Open Employee List from PIM
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnEmployeeListLink();
+    await App.employeeListPage.VerifyEmployeeListDisplayed();
+
+    // Step 5: Verify the new employee appears in the list
+    await App.employeeListPage.verifyEmployeeCountInList(lastName, 1);
   });
 });

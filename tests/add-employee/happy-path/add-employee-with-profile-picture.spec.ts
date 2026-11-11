@@ -1,37 +1,41 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from "../../../fixtures/appbase";
+import { appUrl } from "../../../testdata/app";
+import { happyPath } from "../../../testdata/add-employee.json";
+import { messages } from "../../../testdata/add-employee-error-happy.json";
 
 test.describe('Add Employee - Happy Path Scenarios', () => {
-  test('Add employee with profile picture', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to PIM and Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Upload profile picture
-    const fileInput = page.locator('input[type="file"]');
-    // Note: In real scenario, you would provide a valid test image
-    // await fileInput.setInputFiles('./test-images/profile.jpg');
-    
-    // Fill employee details
-    await page.getByRole('textbox', { name: 'First Name' }).fill('David');
-    await page.getByRole('textbox', { name: 'Last Name' }).fill('Smith');
-    
-    // Save employee
-    await page.getByRole('button', { name: 'Save' }).click();
-    
-    // Verify success
-    await expect(page.locator('text=Successfully Saved')).toBeVisible();
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Add employee with profile picture', async ({ App }) => {
+    // Step 1: Navigate to Add Employee page
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill employee details
+    await App.addEmployeePage.enterFirstName(happyPath.withProfilePicture.firstName);
+    await App.addEmployeePage.enterLastName(happyPath.withProfilePicture.lastName);
+    await App.addEmployeePage.enterUniqueEmployeeId();
+
+    // Step 3: Upload profile picture
+    await App.addEmployeePage.uploadProfilePicture(happyPath.withProfilePicture.profilePicturePath);
+
+    // Step 4: Save employee and verify success
+    await App.addEmployeePage.clickOnSaveButton();
+    await App.addEmployeePage.verifyExpectedMessageDisplayed(messages.successSaved);
+
+    // Step 5: Verify the Personal Details page is shown for the new employee
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
   });
 });

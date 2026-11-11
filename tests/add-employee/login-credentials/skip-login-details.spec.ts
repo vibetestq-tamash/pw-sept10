@@ -1,39 +1,57 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from "../../../fixtures/appbase";
+import { appUrl } from "../../../testdata/app";
+import { happyPath, loginDetailsSkipped } from "../../../testdata/add-employee-login-nav.json";
 
-test.describe('Add Employee - Login Credentials Scenarios', () => {
-  test('Skip login detail creation', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Enter employee details
-    await page.getByRole('textbox', { name: 'First Name' }).fill('NoLogin');
-    await page.getByRole('textbox', { name: 'Last Name' }).fill('Employee');
-    
-    // Do NOT check Create Login Details checkbox
-    // The checkbox should remain unchecked by default
-    
-    // Verify checkbox is unchecked
-    const loginCheckbox = page.locator('input[type="checkbox"]');
-    await expect(loginCheckbox).not.toBeChecked();
-    
-    // Save employee
-    await page.getByRole('button', { name: 'Save' }).click();
-    
-    // Verify success - employee saved without login details
-    await expect(page.locator('text=Successfully Saved')).toBeVisible();
+test.describe('Add Employee - Login Credentials', () => {
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Successfully add employee without login details', async ({ App }) => {
+    // Step 1: Navigate to Add Employee page
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill employee details only, leave Create Login Details unchecked
+    await App.addEmployeePage.enterFirstName(happyPath.requiredFieldsOnly.firstName);
+    await App.addEmployeePage.enterLastName(happyPath.requiredFieldsOnly.lastName);
+    await App.addEmployeePage.enterUniqueEmployeeId();
+
+    // Step 3: Save employee
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 4: Verify employee was created
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
+  });
+
+  test('Skip login detail creation', async ({ App }) => {
+    // Step 1: Navigate to Add Employee form
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill employee details and leave login credentials skipped
+    await App.addEmployeePage.enterFirstName(loginDetailsSkipped.firstName);
+    await App.addEmployeePage.enterLastName(loginDetailsSkipped.lastName);
+
+    // Step 3: Verify Create Login Details checkbox is unchecked by default
+    await App.addEmployeePage.verifyCreateLoginDetailsCheckboxNotChecked();
+
+    // Step 4: Save employee without login details
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 5: Verify success message
+    await App.addEmployeePage.verifySuccessMessageDisplayed();
   });
 });

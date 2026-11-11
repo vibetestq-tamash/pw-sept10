@@ -1,33 +1,34 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from '../../../fixtures/appbase';
+import { appUrl } from '../../../testdata/app';
 
 test.describe('Add Employee - Field Validation Scenarios', () => {
-  test('Validation error when all name fields are empty', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Leave all name fields empty
-    // Do NOT fill any name fields
-    
-    // Try to save
-    await page.getByRole('button', { name: 'Save' }).click();
-    
-    // Verify form validation prevents save
-    await page.waitForTimeout(500);
-    const addEmployeeHeading = page.locator('text=Add Employee');
-    await expect(addEmployeeHeading).toBeVisible();
+
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Validation error when all name fields are empty', async ({ App }) => {
+    // Step 1: Navigate to the Add Employee page
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Attempt to save without filling any name fields
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 3: Verify the validation error is displayed
+    await App.addEmployeePage.verifyErrorMessageDisplayed();
+
+    // Step 4: Verify the form did not submit (still on Add Employee page)
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
   });
 });

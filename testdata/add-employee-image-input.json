@@ -1,0 +1,16 @@
+{
+  "imageUpload": {
+    "changeImage": {
+      "firstName": "ChangeImage",
+      "lastName": "Employee",
+      "secondImagePath": "./test-images/valid-profile-2.jpg"
+    },
+    "clearImageWithoutUpload": {
+      "firstName": "ClearImage",
+      "lastName": "Test"
+    }
+  },
+  "uiHints": {
+    "profilePictureSizeLimit": "Accepts jpg, .png, .gif up to 1MB"
+  }
+}

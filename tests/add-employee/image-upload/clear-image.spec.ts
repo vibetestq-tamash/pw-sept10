@@ -1,42 +1,81 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from "../../../fixtures/appbase";
+import { appUrl } from "../../../testdata/app";
+import { imageUpload } from "../../../testdata/add-employee.json";
+import { imageUpload as imageUploadInput } from "../../../testdata/add-employee-image-input.json";
+
+test.describe('Add Employee - Image Upload', () => {
+
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Clear profile picture after upload', async ({ App }) => {
+    // Step 1: Open the Add Employee form
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill in the required names
+    await App.addEmployeePage.enterFirstName(imageUpload.validImage.firstName);
+    await App.addEmployeePage.enterLastName(imageUpload.validImage.lastName);
+    await App.addEmployeePage.enterUniqueEmployeeId();
+
+    // Step 3: Upload a profile picture
+    await App.addEmployeePage.uploadProfilePicture(imageUpload.validImage.imagePath);
+
+    // Step 4: Verify the remove control appears and clear the picture
+    await App.addEmployeePage.verifyRemoveProfilePictureButtonDisplayed();
+    await App.addEmployeePage.clickOnRemoveProfilePictureButton();
+
+    // Step 5: Verify the picture was cleared
+    await App.addEmployeePage.verifyRemoveProfilePictureButtonNotDisplayed();
+
+    // Step 6: Save the employee
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 7: Verify the employee was created
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
+  });
+});
 
 test.describe('Add Employee - Image Upload Scenarios', () => {
-  test('Clear uploaded image', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Fill employee details
-    await page.getByRole('textbox', { name: 'First Name' }).fill('ClearImage');
-    await page.getByRole('textbox', { name: 'Last Name' }).fill('Test');
-    
-    // Look for the remove button (typically an X icon)
-    // The remove button would be visible if an image was uploaded
-    // For now, we'll just verify the form structure exists
-    const removeButton = page.locator('button[class*="remove"]').or(page.locator('button:has-text("×")'));
-    
-    // If image was uploaded, we'd click remove
-    if (await removeButton.isVisible()) {
-      await removeButton.click();
-    }
-    
-    // Save employee
-    await page.getByRole('button', { name: 'Save' }).click();
-    
-    // Verify success
-    await expect(page.locator('text=Successfully Saved')).toBeVisible();
+
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Clear uploaded image', async ({ App }) => {
+    // Step 1: Open the Add Employee form
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill in the required names
+    await App.addEmployeePage.enterFirstName(imageUploadInput.clearImageWithoutUpload.firstName);
+    await App.addEmployeePage.enterLastName(imageUploadInput.clearImageWithoutUpload.lastName);
+
+    // Step 3: With no image uploaded, the remove control should not be shown
+    await App.addEmployeePage.verifyRemoveProfilePictureButtonNotDisplayed();
+
+    // Step 4: Save the employee
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 5: Verify the save succeeded
+    await App.addEmployeePage.verifySuccessMessageDisplayed();
   });
 });

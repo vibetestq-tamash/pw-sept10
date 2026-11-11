@@ -1,70 +1,75 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from '../../../fixtures/appbase';
+import { appUrl } from '../../../testdata/app';
+import { dataPersistence } from '../../../testdata/add-employee-data-persistence-edge.json';
 
-test.describe('Add Employee - Data Persistence and Verification', () => {
-  test('Verify employee data is persisted in database', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Create unique employee
-    const uniqueName = `DBTest${Date.now()}`;
-    await page.getByRole('textbox', { name: 'First Name' }).fill('Database');
-    await page.getByRole('textbox', { name: 'Last Name' }).fill(uniqueName);
-    
-    // Save employee
-    await page.getByRole('button', { name: 'Save' }).click();
-    
-    // Verify success
-    await expect(page.locator('text=Successfully Saved')).toBeVisible();
-    
-    // Logout
-    const profileMenu = page.locator('img[alt="profile picture"]').first();
-    await profileMenu.click();
-    
-    // Wait for menu to appear
-    await page.waitForTimeout(500);
-    
-    // Click Logout if available
-    const logoutButton = page.locator('text=Logout').or(page.locator('text=Sign Out'));
-    if (await logoutButton.isVisible()) {
-      await logoutButton.click();
-    }
-    
-    // Login again
-    await page.waitForLoadState('networkidle');
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Employee List
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Employee List' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Search for employee
-    const searchField = page.locator('input[placeholder*="Search"]').first();
-    if (await searchField.isVisible()) {
-      await searchField.fill(uniqueName);
-      await page.waitForLoadState('networkidle');
-    }
-    
-    // Verify employee still exists
-    await expect(page.locator('text=Database')).toBeVisible({ timeout: 5000 });
+test.describe('Add Employee - Data Persistence', () => {
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Employee data persists after creation', async ({ App }) => {
+    const employee = dataPersistence.requiredFieldsEmployee;
+
+    // Step 1: Open the Add Employee form from PIM
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill in the required fields and save
+    await App.addEmployeePage.enterFirstName(employee.firstName);
+    await App.addEmployeePage.enterLastName(employee.lastName);
+    await App.addEmployeePage.enterUniqueEmployeeId();
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 3: Verify the saved first and last name on Personal Details
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
+    await App.employeeDetailsPage.verifyEmployeeFirstName(employee.firstName);
+    await App.employeeDetailsPage.verifyEmployeeLastName(employee.lastName);
+  });
+
+  test('Verify employee data is persisted in database', async ({ App, testData }) => {
+    const employee = dataPersistence.databaseEmployee;
+    const lastName = `${employee.lastNamePrefix}${Date.now()}`;
+
+    // Step 1: Open the Add Employee form from PIM
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Create an employee with a unique last name and save
+    await App.addEmployeePage.enterFirstName(employee.firstName);
+    await App.addEmployeePage.enterLastName(lastName);
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 3: Verify the save succeeded
+    await App.addEmployeePage.verifySuccessMessageDisplayed();
+
+    // Step 4: Logout, so the record has to come back from the server on the next login
+    await App.dashboardPage.clickOnProfilePicture();
+    await App.dashboardPage.clickOnLogoutLink();
+    await App.loginPage.verifyLoginPageDisplayed();
+
+    // Step 5: Log in again
+    await App.loginPage.performLogin(testData.username, testData.password);
+    await App.dashboardPage.VerifyDashboardDisplayed();
+
+    // Step 6: Open Employee List from PIM
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnEmployeeListLink();
+    await App.employeeListPage.VerifyEmployeeListDisplayed();
+
+    // Step 7: Verify the employee is still stored after re-login
+    await App.employeeListPage.verifyEmployeeCountInList(lastName, 1);
   });
 });

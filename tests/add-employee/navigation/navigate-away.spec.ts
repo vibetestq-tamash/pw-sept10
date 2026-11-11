@@ -1,44 +1,53 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from "../../../fixtures/appbase";
+import { appUrl } from "../../../testdata/app";
+import { happyPath, navigation } from "../../../testdata/add-employee-login-nav.json";
 
-test.describe('Add Employee - Form Navigation and Cancellation', () => {
-  test('Navigate away from Add Employee page', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Enter employee information
-    await page.getByRole('textbox', { name: 'First Name' }).fill('Navigate');
-    await page.getByRole('textbox', { name: 'Last Name' }).fill('Away');
-    
-    // Click on another menu item to navigate away
-    // Try to navigate to Employee List
-    await page.getByRole('link', { name: 'Employee List' }).click();
-    
-    // Check if warning dialog appears
-    const warningDialog = page.locator('[role="dialog"]').or(page.locator('text=/unsaved|discard|confirm/i'));
-    
-    if (await warningDialog.isVisible()) {
-      // Dialog appeared - click proceed/confirm to navigate
-      const proceedButton = page.locator('button:has-text(/yes|proceed|continue|discard/i)').first();
-      if (await proceedButton.isVisible()) {
-        await proceedButton.click();
-      }
-    }
-    
-    // Verify navigation occurred
-    await page.waitForLoadState('networkidle');
+test.describe('Add Employee - Navigation', () => {
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Navigate away to different menu section', async ({ App }) => {
+    // Step 1: Navigate to Add Employee page
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill employee details
+    await App.addEmployeePage.enterFirstName(happyPath.requiredFieldsOnly.firstName);
+    await App.addEmployeePage.enterLastName(happyPath.requiredFieldsOnly.lastName);
+
+    // Step 3: Navigate away to a different menu section
+    await App.dashboardPage.clickOnPIMLink();
+
+    // Step 4: Verify we're on PIM page
+    await App.pimPage.VerifyPIMDisplayed();
+  });
+
+  test('Navigate away from Add Employee page', async ({ App }) => {
+    // Step 1: Navigate to Add Employee form
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Enter employee information
+    await App.addEmployeePage.enterFirstName(navigation.navigateAway.firstName);
+    await App.addEmployeePage.enterLastName(navigation.navigateAway.lastName);
+
+    // Step 3: Click Employee List link to leave the form
+    await App.pimPage.clickOnEmployeeListLink();
+
+    // Step 4: Verify navigation to Employee List
+    await App.employeeListPage.VerifyEmployeeListDisplayed();
   });
 });

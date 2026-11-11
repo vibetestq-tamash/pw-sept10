@@ -1,0 +1,54 @@
+{
+  "happyPath": {
+    "requiredFieldsOnly": {
+      "firstName": "John",
+      "lastName": "Anderson"
+    }
+  },
+  "loginCredentials": {
+    "validCredentials": {
+      "firstName": "ValidLogin",
+      "lastName": "User",
+      "username": "validlogin.user",
+      "password": "ValidPass@123"
+    },
+    "emptyUsername": {
+      "firstName": "EmptyUser",
+      "lastName": "Test",
+      "password": "TestPass@123"
+    },
+    "emptyPassword": {
+      "firstName": "EmptyPass",
+      "lastName": "Test",
+      "username": "emptypass.test"
+    },
+    "duplicateUsername": {
+      "firstName": "Duplicate",
+      "lastName": "User",
+      "username": "testadmin",
+      "password": "Password@123"
+    }
+  },
+  "loginDetailsSkipped": {
+    "firstName": "NoLogin",
+    "lastName": "Employee"
+  },
+  "navigation": {
+    "backButton": {
+      "firstName": "BackButton",
+      "lastName": "Test"
+    },
+    "cancelCreation": {
+      "firstName": "Cancel",
+      "lastName": "Test"
+    },
+    "cancelUnsavedChanges": {
+      "firstName": "Unsaved",
+      "lastName": "Changes"
+    },
+    "navigateAway": {
+      "firstName": "Navigate",
+      "lastName": "Away"
+    }
+  }
+}

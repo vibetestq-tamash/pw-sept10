@@ -1,0 +1,125 @@
+{
+  "happyPath": {
+    "requiredFieldsOnly": {
+      "firstName": "John",
+      "lastName": "Anderson"
+    },
+    "withMiddleName": {
+      "firstName": "Jane",
+      "middleName": "Marie",
+      "lastName": "Smith"
+    },
+    "withLoginDetails": {
+      "firstName": "LoginTest",
+      "lastName": "Employee",
+      "username": "logintest.employee",
+      "password": "TestPass@123"
+    },
+    "withProfilePicture": {
+      "firstName": "ImageTest",
+      "lastName": "Employee",
+      "profilePicturePath": "./test-images/valid-profile.jpg"
+    }
+  },
+  "validation": {
+    "firstNameRequired": {
+      "firstName": "",
+      "lastName": "TestLast"
+    },
+    "lastNameRequired": {
+      "firstName": "TestFirst",
+      "lastName": ""
+    },
+    "allFieldsEmpty": {
+      "firstName": "",
+      "lastName": ""
+    },
+    "middleNameOptional": {
+      "firstName": "John",
+      "middleName": "",
+      "lastName": "Doe"
+    }
+  },
+  "inputData": {
+    "longName": {
+      "firstName": "VeryLongFirstNameWithManyCharactersToTestBoundary",
+      "lastName": "VeryLongLastNameWithManyCharactersToTestBoundary"
+    },
+    "spaceInName": {
+      "firstName": "John Paul",
+      "lastName": "De Silva"
+    },
+    "specialCharacters": {
+      "firstName": "John-Paul",
+      "lastName": "O'Brien"
+    },
+    "unicodeCharacters": {
+      "firstName": "José",
+      "lastName": "García"
+    },
+    "numericInName": {
+      "firstName": "John123",
+      "lastName": "Doe456"
+    },
+    "onlySpaces": {
+      "firstName": "   ",
+      "lastName": "   "
+    }
+  },
+  "edgeCases": {
+    "employeeIdBoundary": {
+      "firstName": "Edge",
+      "lastName": "Case"
+    },
+    "tabNavigation": {
+      "firstName": "Tab",
+      "lastName": "Test"
+    },
+    "rapidAdditions": {
+      "firstName": "Rapid",
+      "lastName": "Addition"
+    }
+  },
+  "loginCredentials": {
+    "validCredentials": {
+      "firstName": "ValidLogin",
+      "lastName": "User",
+      "username": "validlogin.user",
+      "password": "ValidPass@123"
+    },
+    "emptyUsername": {
+      "firstName": "EmptyUser",
+      "lastName": "Test",
+      "username": "",
+      "password": "TestPass@123"
+    },
+    "emptyPassword": {
+      "firstName": "EmptyPass",
+      "lastName": "Test",
+      "username": "emptypass.test",
+      "password": ""
+    },
+    "duplicateUsername": {
+      "firstName": "Duplicate",
+      "lastName": "User",
+      "username": "testadmin"
+    }
+  },
+  "imageUpload": {
+    "validImage": {
+      "firstName": "ValidImage",
+      "lastName": "Employee",
+      "imagePath": "./test-images/valid-profile.jpg"
+    },
+    "oversizedImage": {
+      "firstName": "OversizedImage",
+      "lastName": "Employee",
+      "imagePath": "./test-images/oversized-image.jpg"
+    },
+    "unsupportedFormat": {
+      "firstName": "UnsupportedFormat",
+      "lastName": "Employee",
+      "imagePath": "./test-images/document.pdf"
+    }
+  }
+}

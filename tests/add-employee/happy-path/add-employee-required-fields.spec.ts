@@ -1,46 +1,81 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from "../../../fixtures/appbase";
+import { appUrl } from "../../../testdata/app";
+import { happyPath } from "../../../testdata/add-employee.json";
+import { messages } from "../../../testdata/add-employee-error-happy.json";
 
 test.describe('Add Employee - Happy Path Scenarios', () => {
-  test('Successfully add employee with required fields only', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to PIM module
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Click Add Employee
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Fill employee name fields
-    await page.getByRole('textbox', { name: 'First Name' }).fill('John');
-    await page.getByRole('textbox', { name: 'Middle Name' }).fill('Michael');
-    await page.getByRole('textbox', { name: 'Last Name' }).fill('Anderson');
-    
-    // Verify Employee ID is auto-populated (5th input: after First/Middle/Last Name and File input)
-    const employeeIdField = page.locator('input').nth(5);
-    await expect(employeeIdField).toHaveValue(/^\d+$/);
-    
-    // Click Save
-    await page.getByRole('button', { name: 'Save' }).click();
-    
-    // Verify success message
-    await expect(page.locator('text=Successfully Saved')).toBeVisible();
-    
-    // Navigate to Employee List to verify employee was created
-    await page.getByRole('link', { name: 'Employee List' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Verify employee appears in list
-    await expect(page.locator('text=John')).toBeVisible();
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Successfully add employee with required fields only', async ({ App }) => {
+    // Step 1: Navigate to Add Employee page
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill required fields and let the Employee Id auto-generate
+    await App.addEmployeePage.enterFirstName(happyPath.requiredFieldsOnly.firstName);
+    await App.addEmployeePage.enterLastName(happyPath.requiredFieldsOnly.lastName);
+    await App.addEmployeePage.enterUniqueEmployeeId();
+
+    // Step 3: Save employee
+    await App.addEmployeePage.clickOnSaveButton();
+    await App.addEmployeePage.verifyExpectedMessageDisplayed(messages.successSaved);
+
+    // Step 4: Verify the Personal Details page is shown for the new employee
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
+  });
+
+  test('Successfully add employee with middle name', async ({ App }) => {
+    // Step 1: Navigate to Add Employee page
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill employee details including middle name
+    await App.addEmployeePage.enterFirstName(happyPath.withMiddleName.firstName);
+    await App.addEmployeePage.enterMiddleName(happyPath.withMiddleName.middleName);
+    await App.addEmployeePage.enterLastName(happyPath.withMiddleName.lastName);
+    await App.addEmployeePage.enterUniqueEmployeeId();
+
+    // Step 3: Save employee
+    await App.addEmployeePage.clickOnSaveButton();
+    await App.addEmployeePage.verifyExpectedMessageDisplayed(messages.successSaved);
+
+    // Step 4: Verify the Personal Details page is shown for the new employee
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
+  });
+
+  test('Employee ID should be auto-generated', async ({ App }) => {
+    // Step 1: Navigate to Add Employee page
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill only the name fields and let the Employee Id auto-generate
+    await App.addEmployeePage.enterFirstName(happyPath.requiredFieldsOnly.firstName);
+    await App.addEmployeePage.enterLastName(happyPath.requiredFieldsOnly.lastName);
+
+    // Step 3: Verify the auto-generated Employee Id is numeric
+    await App.addEmployeePage.verifyEmployeeIdIsNumeric();
+
+    // Step 4: Save employee
+    await App.addEmployeePage.clickOnSaveButton();
+    await App.addEmployeePage.verifyExpectedMessageDisplayed(messages.successSaved);
+
+    // Step 5: Verify the Personal Details page is shown for the new employee
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
   });
 });

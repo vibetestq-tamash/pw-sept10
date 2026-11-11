@@ -4,3 +4,5 @@ export * from "./personaldetailspage";
 export * from "./basepage";
 export * from "./dashboardpage";
 export * from "./pimpage";
+export * from "./employeelistpage";
+export * from "./employeedetailspage";

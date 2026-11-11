@@ -1,35 +1,37 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from "../../../fixtures/appbase";
+import { appUrl } from "../../../testdata/app";
+import { inputData } from "../../../testdata/add-employee.json";
 
 test.describe('Add Employee - Input Data Scenarios', () => {
-  test('Add employee with very long name', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Enter very long names
-    const longFirstName = 'Christopher' + 'a'.repeat(50);
-    const longLastName = 'Montgomery' + 'b'.repeat(50);
-    
-    await page.getByRole('textbox', { name: 'First Name' }).fill(longFirstName);
-    await page.getByRole('textbox', { name: 'Last Name' }).fill(longLastName);
-    
-    // Save employee
-    await page.getByRole('button', { name: 'Save' }).click();
-    
-    // Verify success
-    await expect(page.locator('text=Successfully Saved')).toBeVisible();
+
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Add employee with very long name', async ({ App }) => {
+    // Step 1: Open the Add Employee form
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Enter very long first and last names
+    await App.addEmployeePage.enterFirstName(inputData.longName.firstName);
+    await App.addEmployeePage.enterLastName(inputData.longName.lastName);
+    await App.addEmployeePage.enterUniqueEmployeeId();
+
+    // Step 3: Save the employee
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 4: Verify the employee was created
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
   });
 });

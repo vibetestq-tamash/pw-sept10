@@ -1,46 +1,46 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from "../../../fixtures/appbase";
+import { appUrl } from "../../../testdata/app";
+import { happyPath } from "../../../testdata/add-employee.json";
+import { messages } from "../../../testdata/add-employee-error-happy.json";
 
 test.describe('Add Employee - Happy Path Scenarios', () => {
-  test('Add employee with login credentials', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Enter employee details
-    await page.getByRole('textbox', { name: 'First Name' }).fill('Sarah');
-    await page.getByRole('textbox', { name: 'Last Name' }).fill('Williams');
-    
-    // Check Create Login Details checkbox (force click as overlay may block pointer events)
-    const loginDetailsCheckbox = page.locator('input[type="checkbox"]');
-    await loginDetailsCheckbox.click({ force: true });
-    
-    // Verify login credential fields appear
-    await expect(page.locator('text=Create Login Details')).toBeVisible();
-    
-    // Fill login credentials if fields become visible
-    const usernameInput = page.locator('input[placeholder*="Username"]');
-    if (await usernameInput.isVisible()) {
-      await usernameInput.fill('sarah.williams');
-      await page.locator('input[type="password"]').first().fill('Test@1234');
-    }
-    
-    // Save employee
-    await page.getByRole('button', { name: 'Save' }).click();
-    
-    // Verify success
-    await expect(page.locator('text=Successfully Saved')).toBeVisible();
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Add employee with login credentials', async ({ App }) => {
+    // Step 1: Navigate to Add Employee page
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Enter employee name fields
+    await App.addEmployeePage.enterFirstName(happyPath.withLoginDetails.firstName);
+    await App.addEmployeePage.enterLastName(happyPath.withLoginDetails.lastName);
+    await App.addEmployeePage.enterUniqueEmployeeId();
+
+    // Step 3: Check Create Login Details and verify the login fields appear
+    await App.addEmployeePage.checkCreateLoginDetailsCheckbox();
+    await App.addEmployeePage.verifyCreateLoginDetailsFieldsDisplayed();
+
+    // Step 4: Enter login credentials
+    await App.addEmployeePage.enterUsername(happyPath.withLoginDetails.username);
+    await App.addEmployeePage.enterPassword(happyPath.withLoginDetails.password);
+
+    // Step 5: Save employee and verify success
+    await App.addEmployeePage.clickOnSaveButton();
+    await App.addEmployeePage.verifyExpectedMessageDisplayed(messages.successSaved);
+
+    // Step 6: Verify the Personal Details page is shown for the new employee
+    await App.personalDetailsPage.VerifyPersonalDetailsDisplayed();
   });
 });

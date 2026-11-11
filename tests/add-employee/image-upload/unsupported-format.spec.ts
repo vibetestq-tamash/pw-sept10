@@ -1,34 +1,63 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from "../../../fixtures/appbase";
+import { appUrl } from "../../../testdata/app";
+import { imageUpload } from "../../../testdata/add-employee.json";
+
+test.describe('Add Employee - Image Upload Validation', () => {
+
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Validation error when unsupported image format is uploaded', async ({ App }) => {
+    // Step 1: Open the Add Employee form
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill in the required names
+    await App.addEmployeePage.enterFirstName(imageUpload.unsupportedFormat.firstName);
+    await App.addEmployeePage.enterLastName(imageUpload.unsupportedFormat.lastName);
+    await App.addEmployeePage.enterUniqueEmployeeId();
+
+    // Step 3: Upload an unsupported file format (PDF)
+    await App.addEmployeePage.uploadProfilePicture(imageUpload.unsupportedFormat.imagePath);
+
+    // Step 4: Attempt to save the employee
+    await App.addEmployeePage.clickOnSaveButton();
+
+    // Step 5: Verify the validation error is shown
+    await App.addEmployeePage.verifyErrorMessageDisplayed();
+  });
+});
 
 test.describe('Add Employee - Image Upload Scenarios', () => {
-  test('Image upload rejected for unsupported format', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Verify file upload button exists
-    const chooseFileButton = page.locator('text=Choose File');
-    await expect(chooseFileButton).toBeVisible();
-    
-    // Note: Testing unsupported formats would require attempting to upload a .bmp, .tiff, or .svg file
-    // The system should reject these formats
-    // const fileInput = page.locator('input[type="file"]');
-    // await fileInput.setInputFiles('./test-images/unsupported.bmp');
-    // 
-    // Expected: Error message or file rejection
-    // await expect(page.locator('text=unsupported format')).toBeVisible();
+
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Image upload rejected for unsupported format', async ({ App }) => {
+    // Step 1: Open the Add Employee form
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Verify the file upload control is available
+    await App.addEmployeePage.verifyChooseFileButtonDisplayed();
   });
 });

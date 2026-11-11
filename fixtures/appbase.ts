@@ -10,6 +10,8 @@ type tPages = {
     personalDetailsPage: pages.PersonalDetailsPage;
     dashboardPage: pages.DashboardPage;
     pimPage: pages.PIMPage;
+    employeeListPage: pages.EmployeeListPage;
+    employeeDetailsPage: pages.EmployeeDetailsPage;
 };
 
 export let test = base.extend<{ testData: typeof testData, App: tPages, baTest: void }, { bAll: void }>({
@@ -21,6 +23,8 @@ export let test = base.extend<{ testData: typeof testData, App: tPages, baTest: 
             personalDetailsPage: new pages.PersonalDetailsPage(page),
             dashboardPage: new pages.DashboardPage(page),
             pimPage: new pages.PIMPage(page),
+            employeeListPage: new pages.EmployeeListPage(page),
+            employeeDetailsPage: new pages.EmployeeDetailsPage(page),
         });
     },
     testData: async ({ }, use, testInfo) => {

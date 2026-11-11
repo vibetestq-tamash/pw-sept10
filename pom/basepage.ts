@@ -26,4 +26,9 @@ export class BasePage {
     public async getCurrentUrl() {
         return this.page.url();
     }
+
+    public async navigateBack() {
+        await this.page.goBack();
+        console.log("Navigated back in browser history");
+    }
 }

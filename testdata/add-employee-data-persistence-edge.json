@@ -1,0 +1,71 @@
+{
+  "dataPersistence": {
+    "requiredFieldsEmployee": {
+      "firstName": "John",
+      "lastName": "Anderson"
+    },
+    "editEmployee": {
+      "firstName": "John",
+      "lastName": "Anderson",
+      "updatedFirstName": "Jane"
+    },
+    "databaseEmployee": {
+      "firstName": "Database",
+      "lastNamePrefix": "DBTest"
+    },
+    "listEmployee": {
+      "firstName": "Persist",
+      "lastNamePrefix": "Persistence"
+    },
+    "editListEmployee": {
+      "firstName": "EditTest",
+      "lastNamePrefix": "Original",
+      "modifiedLastName": "ModifiedName"
+    },
+    "viewDetailsEmployee": {
+      "firstName": "ViewDetails",
+      "middleName": "Test",
+      "lastNamePrefix": "Employee"
+    },
+    "withMiddleName": {
+      "firstName": "Jane",
+      "middleName": "Marie",
+      "lastName": "Smith"
+    }
+  },
+  "edgeCases": {
+    "employeeIdBoundary": {
+      "firstName": "Edge",
+      "lastName": "Case"
+    },
+    "idSequenceEmployee": {
+      "firstNamePrefix": "Edge",
+      "lastNamePrefix": "Case",
+      "loopCount": 3
+    },
+    "multipleSaveClicks": {
+      "firstName": "MultiClick",
+      "lastNamePrefix": "Test",
+      "saveClickCount": 3
+    },
+    "onlySpaces": {
+      "firstName": "   ",
+      "lastName": "   "
+    },
+    "tabNavigation": {
+      "firstName": "Tab",
+      "middleName": "Mid",
+      "lastName": "Test",
+      "maxTabPresses": 10
+    },
+    "rapidAdditions": {
+      "firstName1": "RapidOne",
+      "lastName1": "AdditionOne",
+      "firstName2": "RapidTwo",
+      "lastName2": "AdditionTwo",
+      "firstNamePrefix": "Rapid",
+      "lastNamePrefix": "Addition",
+      "loopCount": 3
+    }
+  }
+}

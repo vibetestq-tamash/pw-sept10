@@ -1,76 +1,75 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from "../../../fixtures/appbase";
+import { appUrl } from "../../../testdata/app";
+import { errorHandling } from "../../../testdata/add-employee-error-happy.json";
+
+test.describe('Add Employee - Error Handling', () => {
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Handle session timeout during employee creation', async ({ App }) => {
+    const data = errorHandling.sessionTimeoutDuringSave;
+
+    // Step 1: Navigate to Add Employee page
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill employee details
+    await App.addEmployeePage.enterFirstName(data.firstName);
+    await App.addEmployeePage.enterLastName(data.lastName);
+    await App.addEmployeePage.enterUniqueEmployeeId();
+
+    // Step 3: Simulate session expiry by clearing the session cookies
+    await App.addEmployeePage.clearSessionCookies();
+
+    // Step 4: Save and verify the session timeout is handled (login page shown)
+    await App.addEmployeePage.clickOnSaveButton();
+    await App.addEmployeePage.verifySessionTimeoutHandled();
+  });
+});
 
 test.describe('Add Employee - Error Handling and Recovery', () => {
-  test('Session timeout during form interaction', async ({ page, context }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Fill employee details
-    await page.getByRole('textbox', { name: 'First Name' }).fill('SessionTimeout');
-    await page.getByRole('textbox', { name: 'Last Name' }).fill('Test');
-    
-    // Simulate session timeout by clearing cookies
-    const cookies = await context.cookies();
-    for (const cookie of cookies) {
-      if (cookie.name.toLowerCase().includes('session') || 
-          cookie.name.toLowerCase().includes('auth') ||
-          cookie.name.toLowerCase().includes('cookie')) {
-        await context.clearCookies({ name: cookie.name });
-      }
-    }
-    
-    // Try to save
-    await page.getByRole('button', { name: 'Save' }).click();
-    
-    // Wait for response
-    await page.waitForLoadState('networkidle');
-    
-    // System should either:
-    // 1. Redirect to login page
-    // 2. Show session expired message
-    // 3. Show error message
-    
-    const loginPageIndicators = [
-      page.locator('text=Login'),
-      page.locator('text=Session Expired'),
-      page.locator('text=Please Login'),
-      page.locator('text=Username')
-    ];
-    
-    let foundIndicator = false;
-    for (const indicator of loginPageIndicators) {
-      if (await indicator.isVisible({ timeout: 5000 }).catch(() => false)) {
-        foundIndicator = true;
-        break;
-      }
-    }
-    
-    // Verify session timeout was handled
-    expect(foundIndicator || page.url().includes('login')).toBeTruthy();
-    
-    // Re-login
-    if (await page.locator('text=Username').isVisible()) {
-      await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-      await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-      await page.getByRole('button', { name: 'Login' }).click();
-      await page.waitForLoadState('networkidle');
-      
-      // Verify login successful
-      await expect(page.locator('text=Dashboard').or(page.locator('heading'))).toBeVisible({ timeout: 5000 });
-    }
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Session timeout during form interaction', async ({ App, testData }) => {
+    const data = errorHandling.sessionTimeoutDuringFormInteraction;
+
+    // Step 1: Navigate to Add Employee form
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill the form
+    await App.addEmployeePage.enterFirstName(data.firstName);
+    await App.addEmployeePage.enterLastName(data.lastName);
+
+    // Step 3: Simulate session expiry by clearing the session cookies
+    await App.addEmployeePage.clearSessionCookies();
+
+    // Step 4: Save and verify the session timeout is handled (login page shown)
+    await App.addEmployeePage.clickOnSaveButton();
+    await App.addEmployeePage.verifySessionTimeoutHandled();
+
+    // Step 5: Re-login and verify the dashboard is shown
+    await App.loginPage.performLogin(testData.username, testData.password);
+    await App.dashboardPage.VerifyDashboardDisplayed();
   });
 });

@@ -1,45 +1,53 @@
 // spec: tests/add-employee-test-plan.md
-// seed: tests/seed.spec.ts
+// seed: tests/19POMTestWithBaseAppDDT.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test } from "../../../fixtures/appbase";
+import { appUrl } from "../../../testdata/app";
+import { happyPath, navigation } from "../../../testdata/add-employee-login-nav.json";
 
-test.describe('Add Employee - Form Navigation and Cancellation', () => {
-  test('Cancel with unsaved changes confirmation', async ({ page }) => {
-    // Navigate to login page
-    await page.goto('https://qtpsudhakar-vibetestq-hrm.up.railway.app/web/index.php/auth/login');
-    
-    // Login
-    await page.getByRole('textbox', { name: 'Username' }).fill('testadmin');
-    await page.getByRole('textbox', { name: 'Password' }).fill('Vibetestq@123#');
-    await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Navigate to Add Employee
-    await page.getByRole('link', { name: 'PIM' }).click();
-    await page.waitForLoadState('networkidle');
-    await page.getByRole('link', { name: 'Add Employee' }).click();
-    await page.waitForLoadState('networkidle');
-    
-    // Enter employee information
-    await page.getByRole('textbox', { name: 'First Name' }).fill('Unsaved');
-    await page.getByRole('textbox', { name: 'Last Name' }).fill('Changes');
-    
-    // Click Cancel button
-    await page.getByRole('button', { name: 'Cancel' }).click();
-    
-    // Check if confirmation dialog appears
-    const confirmDialog = page.locator('[role="dialog"]').or(page.locator('text=/confirm|discard|unsaved/i'));
-    
-    // If dialog appears, accept/confirm cancellation
-    if (await confirmDialog.isVisible()) {
-      const confirmButton = page.locator('button:has-text(/yes|confirm|discard/i)').first();
-      if (await confirmButton.isVisible()) {
-        await confirmButton.click();
-      }
-    }
-    
-    // Verify navigation away from form
-    await page.waitForLoadState('networkidle');
-    const addEmployeeHeading = page.locator('heading:has-text("Add Employee")');
-    await expect(addEmployeeHeading).not.toBeVisible();
+test.describe('Add Employee - Navigation', () => {
+  test.beforeEach(async ({ App, testData }) => {
+    await App.basePage.navigateTo(appUrl);
+    await App.loginPage.verifyLoginPageDisplayed();
+    await App.loginPage.enterUserName(testData.username);
+    await App.loginPage.enterPassword(testData.password);
+    await App.loginPage.clickOnLogin();
+    await App.dashboardPage.VerifyDashboardDisplayed();
+  });
+
+  test('Cancel unsaved changes when navigating away', async ({ App }) => {
+    // Step 1: Navigate to Add Employee page
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Fill employee details
+    await App.addEmployeePage.enterFirstName(happyPath.requiredFieldsOnly.firstName);
+    await App.addEmployeePage.enterLastName(happyPath.requiredFieldsOnly.lastName);
+
+    // Step 3: Navigate away without saving (click Cancel)
+    await App.addEmployeePage.clickOnCancelButton();
+
+    // Step 4: Verify unsaved changes were discarded and we're back on PIM
+    await App.pimPage.VerifyPIMDisplayed();
+  });
+
+  test('Cancel with unsaved changes confirmation', async ({ App }) => {
+    // Step 1: Navigate to Add Employee form
+    await App.dashboardPage.clickOnPIMLink();
+    await App.pimPage.VerifyPIMDisplayed();
+    await App.pimPage.clickOnAddEmployeeLink();
+    await App.addEmployeePage.VerifyAddEmployeeDisplayed();
+
+    // Step 2: Enter employee information
+    await App.addEmployeePage.enterFirstName(navigation.cancelUnsavedChanges.firstName);
+    await App.addEmployeePage.enterLastName(navigation.cancelUnsavedChanges.lastName);
+
+    // Step 3: Click Cancel
+    await App.addEmployeePage.clickOnCancelButton();
+
+    // Step 4: Verify the cancelled navigation left the Add Employee form
+    await App.addEmployeePage.verifyAddEmployeeNotDisplayed();
   });
 });
